@@ -5,6 +5,10 @@
     "fetch": "Récupérer",
     "refresh": "Actualiser"
   },
+  "timezone": {
+    "label": "Fuseau horaire",
+    "system": "Système"
+  },
   "home": {
     "title": "Tableau de Bord Z.AI Coding",
     "subtitle": "Analyse d'Utilisation & Documentation"

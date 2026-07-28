@@ -5,6 +5,10 @@
     "fetch": "Fetch",
     "refresh": "Refresh"
   },
+  "timezone": {
+    "label": "Timezone",
+    "system": "System"
+  },
   "home": {
     "title": "Z.AI Coding Plan Dashboard",
     "subtitle": "Usage Analytics & Documentation"

@@ -1,16 +1,35 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTimezone } from '@/components/TimezoneContext';
 
 interface TimeSeriesItem {
   time: string;
   fullTime: string;
+  timestamp: number | null;
   calls: number;
   tokens: number;
+}
+
+function tooltipLabel(label: unknown, payload: ReadonlyArray<{ payload?: unknown }> | undefined) {
+  const point = payload?.[0]?.payload as { fullLabel?: string } | undefined;
+  return point?.fullLabel ?? String(label ?? '');
+}
+
+function tooltipValue(value: unknown) {
+  return typeof value === 'number' ? value.toLocaleString() : String(value ?? '0');
+}
+
+function safeFormatter(locale: string, timeZone: string, options: Intl.DateTimeFormatOptions) {
+  try {
+    return new Intl.DateTimeFormat(locale, { ...options, timeZone });
+  } catch {
+    return new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' });
+  }
 }
 
 interface ModelUsageData {
@@ -31,6 +50,8 @@ interface UsageChartsProps {
 
 export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
   const t = useTranslations();
+  const locale = useLocale();
+  const { timezone } = useTimezone();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -38,6 +59,24 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
+
+  // The API reports hours in Beijing wall-clock time; re-render them in the selected zone.
+  const chartData = useMemo(() => {
+    const axisFormatter = safeFormatter(locale, timezone, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    const tooltipFormatter = safeFormatter(locale, timezone, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    });
+
+    return (modelUsage?.timeSeries ?? []).map((item) => ({
+      ...item,
+      label: item.timestamp != null ? axisFormatter.format(item.timestamp) : item.time,
+      fullLabel: item.timestamp != null ? tooltipFormatter.format(item.timestamp) : item.fullTime,
+    }));
+  }, [modelUsage?.timeSeries, locale, timezone]);
 
   const hasModelData = modelUsage?.timeSeries && modelUsage.timeSeries.length > 0;
   const hasQuotaData = quotaLimits && quotaLimits.length > 0;
@@ -91,7 +130,7 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
           <CardContent>
             <div className='h-[180px]'>
               <ResponsiveContainer width='100%' height='100%'>
-                <AreaChart data={modelUsage.timeSeries} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id='colorTokens' x1='0' y1='0' x2='0' y2='1'>
                       <stop offset='5%' stopColor={colors.area} stopOpacity={isDark ? 0.4 : 0.3} />
@@ -100,16 +139,19 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
                   </defs>
                   <CartesianGrid strokeDasharray='3 3' stroke={colors.grid} />
                   <XAxis
-                    dataKey='time'
+                    dataKey='label'
                     tick={{ fontSize: 10, fill: colors.text }}
                     tickLine={false}
+                    tickMargin={6}
+                    minTickGap={16}
                     stroke={colors.grid}
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: colors.text }}
                     tickLine={false}
                     axisLine={false}
-                    width={40}
+                    width={48}
+                    tickMargin={4}
                     tickFormatter={(value) => {
                       if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                       if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
@@ -126,8 +168,8 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
                       padding: '6px 10px',
                     }}
                     cursor={{ stroke: colors.cursorLine, strokeWidth: 1 }}
-                    formatter={(value: number | undefined) => [`${value?.toLocaleString() ?? '0'} tokens`, t('charts.usage')]}
-                    labelFormatter={(label: string) => t('charts.time', { time: label })}
+                    formatter={(value) => [`${tooltipValue(value)} tokens`, t('charts.usage')]}
+                    labelFormatter={(label, payload) => t('charts.time', { time: tooltipLabel(label, payload) })}
                     labelStyle={{ color: colors.tooltipText, fontSize: '10px' }}
                   />
                   <Area
@@ -157,19 +199,24 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
           <CardContent>
             <div className='h-[180px]'>
               <ResponsiveContainer width='100%' height='100%'>
-                <BarChart data={modelUsage.timeSeries} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray='3 3' stroke={colors.grid} />
                   <XAxis
-                    dataKey='time'
+                    dataKey='label'
                     tick={{ fontSize: 10, fill: colors.text }}
                     tickLine={false}
+                    tickMargin={6}
+                    minTickGap={16}
                     stroke={colors.grid}
                   />
                   <YAxis
                     tick={{ fontSize: 10, fill: colors.text }}
                     tickLine={false}
                     axisLine={false}
-                    width={32}
+                    width={40}
+                    tickMargin={4}
+                    allowDecimals={false}
+                    tickFormatter={(value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value)}
                   />
                   <Tooltip
                     contentStyle={{
@@ -181,8 +228,8 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
                       padding: '6px 10px',
                     }}
                     cursor={{ fill: colors.cursorFill }}
-                    formatter={(value: number | undefined) => [`${value?.toLocaleString() ?? '0'} ${t('charts.calls')}`, t('charts.usage')]}
-                    labelFormatter={(label: string) => t('charts.time', { time: label })}
+                    formatter={(value) => [`${tooltipValue(value)} ${t('charts.calls')}`, t('charts.usage')]}
+                    labelFormatter={(label, payload) => t('charts.time', { time: tooltipLabel(label, payload) })}
                     labelStyle={{ color: colors.tooltipText, fontSize: '10px' }}
                   />
                   <Bar

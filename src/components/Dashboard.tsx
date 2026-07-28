@@ -1,15 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useCallback, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { AlertCircle, ClipboardPaste, Eye, EyeOff, Key, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useUsage } from '@/components/UsageContext';
+import { useTimezone } from '@/components/TimezoneContext';
+import { formatWallClockDate } from '@/lib/timezone';
 
 export function Dashboard() {
   const t = useTranslations();
+  const locale = useLocale();
+  const { timezone } = useTimezone();
   const {
     apiKey,
     setApiKey,
@@ -35,7 +39,21 @@ export function Dashboard() {
 
   const formatResetTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Monthly quotas reset days from now — showing a bare clock time would be misleading.
+    const isToday = formatWallClockDate(date, timezone) === formatWallClockDate(new Date(), timezone);
+    const options: Intl.DateTimeFormatOptions = {
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: timezone,
+      ...(isToday ? {} : { month: 'short', day: 'numeric' }),
+    };
+
+    try {
+      return new Intl.DateTimeFormat(locale, options).format(date);
+    } catch {
+      return new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(date);
+    }
   };
 
   return (

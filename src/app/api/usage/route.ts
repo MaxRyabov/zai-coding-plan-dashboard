@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { parseWallClock, ZAI_TIMEZONE } from '@/lib/timezone';
 
 const ZAI_BASE_URL = 'https://api.z.ai';
 
@@ -71,10 +72,13 @@ export async function POST(request: NextRequest) {
       return item;
     });
 
-    // Transform model usage time series data for charts
+    // Transform model usage time series data for charts.
+    // x_time is a Beijing wall-clock string; resolve it to an instant so the client can
+    // render it in whichever timezone the user picked.
     const modelUsageTimeSeries = modelUsage?.x_time?.map((time: string, index: number) => ({
       time: time.split(' ')[1] || time, // Extract just the hour
       fullTime: time,
+      timestamp: parseWallClock(time, ZAI_TIMEZONE),
       calls: modelUsage.modelCallCount?.[index] || 0,
       tokens: modelUsage.tokensUsage?.[index] || 0,
     })).filter((item: { calls: number; tokens: number }) => item.calls > 0 || item.tokens > 0) || [];

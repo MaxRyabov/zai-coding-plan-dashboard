@@ -5,6 +5,10 @@
     "fetch": "获取",
     "refresh": "刷新"
   },
+  "timezone": {
+    "label": "时区",
+    "system": "系统"
+  },
   "home": {
     "title": "Z.AI Coding 仪表板",
     "subtitle": "使用情况分析 & 文档"

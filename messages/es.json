@@ -5,6 +5,10 @@
     "fetch": "Obtener",
     "refresh": "Actualizar"
   },
+  "timezone": {
+    "label": "Zona horaria",
+    "system": "Sistema"
+  },
   "home": {
     "title": "Panel de Z.AI Coding",
     "subtitle": "Análisis de Uso & Documentación"

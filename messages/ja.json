@@ -5,6 +5,10 @@
     "fetch": "取得",
     "refresh": "更新"
   },
+  "timezone": {
+    "label": "タイムゾーン",
+    "system": "システム"
+  },
   "home": {
     "title": "Z.AI Coding ダッシュボード",
     "subtitle": "使用状況分析 & ドキュメント"

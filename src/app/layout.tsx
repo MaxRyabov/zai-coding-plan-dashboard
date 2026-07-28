@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { UsageProvider } from '@/components/UsageContext';
+import { TimezoneProvider } from '@/components/TimezoneContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -22,9 +23,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        <UsageProvider>
-          {children}
-        </UsageProvider>
+        <TimezoneProvider>
+          <UsageProvider>
+            {children}
+          </UsageProvider>
+        </TimezoneProvider>
       </body>
     </html>
   );

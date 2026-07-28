@@ -5,6 +5,10 @@
     "fetch": "Abrufen",
     "refresh": "Aktualisieren"
   },
+  "timezone": {
+    "label": "Zeitzone",
+    "system": "System"
+  },
   "home": {
     "title": "Z.AI Coding Dashboard",
     "subtitle": "Nutzungsanalyse & Dokumentation"

@@ -7,6 +7,7 @@ import { UsageCharts } from '@/components/UsageCharts';
 import { useUsage } from '@/components/UsageContext';
 import { ModeToggle } from '@/components/ModeToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { TimezoneSwitcher } from '@/components/TimezoneSwitcher';
 import { BarChart3, BookOpen, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -51,6 +52,7 @@ export default function Home() {
                   <span className='hidden sm:inline'>GitHub</span>
                 </a>
               </Button>
+              <TimezoneSwitcher align='end' />
               <LanguageSwitcher align='end' />
               <ModeToggle align='end' />
             </nav>

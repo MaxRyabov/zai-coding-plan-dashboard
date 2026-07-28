@@ -5,6 +5,10 @@
     "fetch": "가져오기",
     "refresh": "새로고침"
   },
+  "timezone": {
+    "label": "시간대",
+    "system": "시스템"
+  },
   "home": {
     "title": "Z.AI Coding 대시보드",
     "subtitle": "사용 현황 분석 & 문서"
