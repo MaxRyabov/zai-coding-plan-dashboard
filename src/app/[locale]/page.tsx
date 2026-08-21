@@ -1,19 +1,70 @@
 'use client';
 
+import { useState } from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { Dashboard } from '@/components/Dashboard';
-import { UsageCharts } from '@/components/UsageCharts';
-import { useUsage } from '@/components/UsageContext';
+import { AccountsManager } from '@/components/AccountsManager';
+import { AccountSection } from '@/components/AccountSection';
+import { AccountSummaryTable } from '@/components/AccountSummaryTable';
+import { UnlockGate } from '@/components/UnlockGate';
+import { useVault } from '@/components/VaultContext';
 import { ModeToggle } from '@/components/ModeToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TimezoneSwitcher } from '@/components/TimezoneSwitcher';
-import { BarChart3, BookOpen, Github } from 'lucide-react';
+import { RefreshIntervalSwitcher } from '@/components/RefreshIntervalSwitcher';
+import { BarChart3, BookOpen, Github, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+function DashboardBody() {
+  const { status, isReady, accounts } = useVault();
+  const [isManaging, setIsManaging] = useState(false);
+
+  // Storage is only readable on the client; a fixed-height skeleton keeps the server markup
+  // and the first client render identical.
+  if (!isReady) {
+    return (
+      <Card className='max-w-md'>
+        <CardContent className='h-24 animate-pulse' />
+      </Card>
+    );
+  }
+
+  if (status !== 'unlocked') {
+    return <UnlockGate />;
+  }
+
+  if (accounts.length === 0) {
+    return <AccountsManager defaultOpenForm />;
+  }
+
+  return (
+    <div className='flex flex-col gap-8'>
+      <div className='flex flex-col gap-4'>
+        <AccountSummaryTable onManage={() => setIsManaging(!isManaging)} isManaging={isManaging} />
+        {isManaging && <AccountsManager />}
+      </div>
+      {accounts.map((account) => <AccountSection key={account.id} account={account} />)}
+    </div>
+  );
+}
+
+function LockButton() {
+  const t = useTranslations();
+  const { status, lock } = useVault();
+
+  if (status !== 'unlocked') return null;
+
+  return (
+    <Button variant='ghost' size='sm' className='rounded-full h-8 px-3 text-xs gap-1.5' onClick={lock} title={t('common.lock')}>
+      <Lock className='w-3.5 h-3.5' />
+      <span className='hidden sm:inline'>{t('common.lock')}</span>
+    </Button>
+  );
+}
 
 export default function Home() {
   const t = useTranslations();
-  const { usageData } = useUsage();
 
   return (
     <div className='min-h-screen bg-background relative overflow-hidden flex flex-col'>
@@ -52,9 +103,11 @@ export default function Home() {
                   <span className='hidden sm:inline'>GitHub</span>
                 </a>
               </Button>
+              <RefreshIntervalSwitcher align='end' />
               <TimezoneSwitcher align='end' />
               <LanguageSwitcher align='end' />
               <ModeToggle align='end' />
+              <LockButton />
             </nav>
           </div>
         </div>
@@ -72,19 +125,7 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Dashboard */}
-        <Dashboard />
-
-        {/* Charts */}
-        {usageData && (
-          <div className='mt-4'>
-            <UsageCharts
-              key={`charts-${usageData.modelUsage?.totalTokens ?? 0}`}
-              modelUsage={usageData.modelUsage}
-              quotaLimits={usageData.quotaLimit?.limits}
-            />
-          </div>
-        )}
+        <DashboardBody />
       </main>
 
       {/* Footer */}

@@ -1,39 +1,90 @@
 {
   "common": {
     "language": "Idioma",
-    "loading": "Cargando...",
-    "fetch": "Obtener",
-    "refresh": "Actualizar"
+    "refresh": "Actualizar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "remove": "Eliminar",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "refreshAll": "Actualizar todo",
+    "lock": "Bloquear"
   },
   "timezone": {
     "label": "Zona horaria",
     "system": "Sistema"
   },
+  "refresh": {
+    "label": "Actualización automática",
+    "off": "Desactivada",
+    "minutes": "{count} min",
+    "lastUpdated": "Actualizado {time}"
+  },
   "home": {
     "title": "Panel de Z.AI Coding",
     "subtitle": "Análisis de Uso & Documentación"
   },
+  "vault": {
+    "setupTitle": "Define una contraseña maestra",
+    "setupDescription": "Tus claves de API se cifran con esta contraseña y nunca salen sin cifrar de este navegador.",
+    "setupWarning": "No hay recuperación. Si olvidas la contraseña tendrás que volver a introducir todas las claves.",
+    "unlockTitle": "Desbloquear",
+    "unlockDescription": "Introduce tu contraseña maestra para descifrar las cuentas guardadas.",
+    "password": "Contraseña maestra",
+    "confirmPassword": "Repite la contraseña",
+    "unlock": "Desbloquear",
+    "create": "Crear almacén",
+    "unlocking": "Desbloqueando…",
+    "wrongPassword": "Contraseña incorrecta",
+    "mismatch": "Las contraseñas no coinciden",
+    "tooShort": "Al menos {count} caracteres",
+    "corrupt": "No se pudieron leer los datos guardados. Reinicia para empezar de nuevo.",
+    "unsupportedVersion": "Este almacén fue creado por una versión más reciente del panel.",
+    "unavailableTitle": "Cifrado no disponible",
+    "unavailable": "Web Crypto solo funciona con HTTPS o en localhost. Abre el panel con una conexión segura para guardar claves.",
+    "migrationNotice": "Se encontró una clave de API de la versión anterior. Se importará como tu primera cuenta.",
+    "forgot": "¿Olvidaste la contraseña?",
+    "resetWarning": "Esto elimina todas las cuentas guardadas. Tendrás que volver a introducir tus claves de API.",
+    "reset": "Eliminar y empezar de nuevo",
+    "saveFailed": "No se pudo escribir en el almacenamiento del navegador."
+  },
+  "accounts": {
+    "title": "Cuentas",
+    "manage": "Gestionar",
+    "add": "Añadir cuenta",
+    "labelPlaceholder": "Nombre, p. ej. Trabajo",
+    "removeConfirm": "¿Eliminar «{label}»? Su clave de API se borrará.",
+    "duplicate": "Esta clave ya está guardada en otra cuenta.",
+    "empty": "Aún no hay cuentas."
+  },
   "apiKey": {
-    "title": "API Key",
-    "description": "Tu API key solo se usa para consultar los servidores de Z.AI y no se almacena.",
+    "description": "Las claves se cifran con tu contraseña maestra y solo se guardan en este navegador.",
     "placeholder": "Ingresa tu API key de Z.AI",
     "paste": "Pegar del portapapeles",
     "show": "Mostrar clave",
     "hide": "Ocultar clave",
     "invalid": "Formato: 32 caracteres hexadecimales + punto + 16 caracteres alfanuméricos"
   },
+  "summary": {
+    "title": "Todas las cuentas",
+    "account": "Cuenta",
+    "tokenQuota": "Tokens (5 h)",
+    "weekQuota": "Tokens (7 d)",
+    "mcpQuota": "MCP (mes)",
+    "tokens": "Tokens 24 h",
+    "tokens7d": "Tokens 7 d",
+    "calls": "Llamadas 24 h",
+    "total": "Total",
+    "never": "Sin cargar",
+    "partial": "Datos parciales",
+    "countedFrom": "{counted} de {total} cuentas",
+    "noActivity": "Sin actividad en las últimas 24 horas."
+  },
   "quota": {
     "used": "% usado",
     "remaining": "restante",
     "resetsAt": "Reinicia a las {time}"
-  },
-  "modelUsage": {
-    "title": "Uso de Modelos (Últimas 24h)",
-    "model": "Modelo",
-    "requests": "Solicitudes",
-    "input": "Entrada",
-    "output": "Salida",
-    "total": "Total"
   },
   "toolUsage": {
     "title": "Uso de Herramientas (Últimas 24h)",
@@ -53,12 +104,14 @@
     "calls": "llamadas",
     "remaining": "Restante"
   },
-  "empty": {
-    "title": "Ingresa tu API Key",
-    "description": "Ingresa tu API key y haz clic en \"Obtener\" para ver tus estadísticas de uso."
-  },
   "errors": {
-    "fetchFailed": "Error al obtener los datos de uso"
+    "fetchFailed": "Error al obtener los datos de uso",
+    "invalidKey": "Clave de API no válida",
+    "forbidden": "Acceso denegado para esta clave de API",
+    "rateLimited": "Z.AI ha limitado las solicitudes: inténtalo más tarde",
+    "upstream": "Error de Z.AI ({status})",
+    "unreachable": "Z.AI no respondió: comprueba la conexión e inténtalo de nuevo",
+    "upstreamCode": "Z.AI devolvió el código {code}"
   },
   "docs": {
     "title": "Documentación",
@@ -97,8 +150,8 @@
     },
     "faq": {
       "title": "Preguntas Frecuentes",
-      "q1": "¿Se almacena mi API key?",
-      "a1": "No, tu API key solo se almacena en el localStorage de tu navegador y nunca se envía a ningún servidor excepto la API oficial de Z.AI.",
+      "q1": "¿Se almacenan mis claves de API?",
+      "a1": "Sí, pero nunca en texto plano. Las claves se cifran en tu navegador con la contraseña maestra y en localStorage solo se escribe el texto cifrado. Llegan a Z.AI a través de la ruta de API de esta aplicación, que no guarda nada.",
       "q2": "¿Con qué frecuencia se actualizan los datos?",
       "a2": "Los datos se obtienen en tiempo real cuando haces clic en el botón Obtener. Puedes actualizar en cualquier momento.",
       "q3": "¿Qué rango de tiempo se muestra?",

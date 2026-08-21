@@ -24,10 +24,14 @@ The Z.AI Usage Dashboard is a web application that helps you monitor your GLM Co
 <Accordion title="Is my API key stored?">
 
 <Callout type="info">
-Your privacy is protected.
+Keys are encrypted before they touch disk.
 </Callout>
 
-No, your API key is only used to make requests to Z.AI servers and is **not stored on our servers**. It's kept temporarily in your browser's `localStorage` for convenience.
+Yes, but never in plain text. Your accounts are encrypted in the browser with a key derived from your master password (PBKDF2-HMAC-SHA256, then AES-GCM), and only the ciphertext reaches `localStorage`. The master password itself is never stored — it lives in memory until you lock the vault or close the tab.
+
+Requests to Z.AI pass through this app's own `/api/usage` route, which forwards the key and keeps nothing.
+
+**This protects against** someone reading `localStorage` on a shared machine, a synced browser profile, or a browser backup. **It does not protect against** script injected into the page while the vault is unlocked, or a malicious browser extension.
 
 </Accordion>
 

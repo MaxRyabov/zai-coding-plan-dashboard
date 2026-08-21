@@ -14,7 +14,11 @@ El Panel de Uso de Z.AI es una aplicación web que te ayuda a monitorear tu uso 
 
 ### ¿Se almacena mi clave API?
 
-No, tu clave API solo se usa para hacer solicitudes a los servidores de Z.AI y no se almacena en nuestros servidores. Se mantiene temporalmente en la memoria de tu navegador durante tu sesión.
+Sí, pero nunca en texto plano. Tus cuentas se cifran en el navegador con una clave derivada de tu contraseña maestra (PBKDF2-HMAC-SHA256 y luego AES-GCM), y en `localStorage` solo se escribe el texto cifrado. La contraseña maestra no se guarda en ningún sitio: vive en memoria hasta que bloqueas el almacén o cierras la pestaña.
+
+Las peticiones a Z.AI pasan por la ruta `/api/usage` de esta misma aplicación, que reenvía la clave y no guarda nada.
+
+**Protege frente a** que alguien lea `localStorage` en un equipo compartido, un perfil de navegador sincronizado o una copia de seguridad del navegador. **No protege frente a** código inyectado en la página mientras el almacén está desbloqueado, ni frente a una extensión maliciosa.
 
 ### ¿Con qué frecuencia se restablece la cuota?
 

@@ -12,12 +12,14 @@ A modern Next.js dashboard for monitoring Z.AI API usage with real-time analytic
 
 ## Features
 
+- **Multiple Accounts** - Watch every Z.AI key at once: a summary table with a totals row, plus a full dashboard per account
+- **Encrypted Key Storage** - Keys are encrypted with a master password (PBKDF2 + AES-GCM); only ciphertext reaches `localStorage`
 - **Real-time Usage Tracking** - Monitor model calls, token usage, and tool performance
 - **Quota Management** - Visual progress bars for limits (5-hour tokens, monthly MCP usage)
 - **Time-series Analytics** - Interactive charts showing usage trends over time
+- **Auto-refresh** - Every account refreshed in parallel, on an interval you choose (off / 1 / 5 / 15 min)
 - **Multi-language Support** - 7 locales (English, Chinese, Japanese, Korean, Spanish, French, German)
 - **Dark/Light Mode** - Material You-inspired design with theme toggle
-- **API Key Validation** - Secure key storage with automatic validation
 
 ## Screenshot
 
@@ -50,19 +52,30 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## API Reference
 
+Z.AI's own monitoring endpoints are undocumented. Everything this project has established
+about them — payload shapes, the auth failure that arrives as HTTP 200, the two token caps
+that share one `type`, and what is still unknown — is written down in
+[`docs/zai-api.md`](docs/zai-api.md). **Read it before changing anything that talks to
+`api.z.ai`.**
+
 ### POST /api/usage
 
-Fetch usage statistics from Z.AI API.
+The dashboard's own proxy route. Fetches usage statistics from the Z.AI API.
 
 **Request Body:**
 
 ```json
 {
   "apiKey": "string (required) - Z.AI API key in format [hex32].[alphanum16]",
-  "startTime": "string (optional) - ISO format start time",
-  "endTime": "string (optional) - ISO format end time"
+  "startTime": "string (optional) - Beijing wall clock, YYYY-MM-DD HH:mm:ss",
+  "endTime": "string (optional) - Beijing wall clock, YYYY-MM-DD HH:mm:ss",
+  "extendedStartTime": "string (optional) - second, wider window; totals only",
+  "extendedEndTime": "string (optional) - must be given together with extendedStartTime"
 }
 ```
+
+Supplying the extended pair adds one more `model-usage` call over the wider range and
+populates `extendedUsage` in the response. The dashboard uses it for the 7-day column.
 
 **Response:**
 
@@ -91,6 +104,7 @@ Fetch usage statistics from Z.AI API.
   "quotaLimit": {
     "limits": [
       {
+        "kind": "tokens",
         "type": "Token Usage (5 Hour)",
         "percentage": 65,
         "currentUsage": 650000,
@@ -99,6 +113,7 @@ Fetch usage statistics from Z.AI API.
         "nextResetTime": 1736812800000
       },
       {
+        "kind": "mcp",
         "type": "MCP Usage (1 Month)",
         "percentage": 42,
         "currentUsage": 84,
@@ -107,9 +122,25 @@ Fetch usage statistics from Z.AI API.
         "usageDetails": [...]
       }
     ]
+  },
+  "extendedUsage": {
+    "totalCalls": 9800,
+    "totalTokens": 71000000
+  },
+  "upstream": {
+    "status": { "modelUsage": 200, "toolUsage": 200, "quotaLimit": 200, "extendedUsage": 200 }
   }
 }
 ```
+
+`extendedUsage` is `null` when the wider window was not requested or did not answer, so the UI
+can tell "no data" from "no usage". Its status key appears only when the window was requested,
+and it never affects the all-endpoints-failed verdict.
+
+`upstream.status` carries the per-endpoint result so a dead key can be told apart from an idle
+one. Z.AI answers a bad key with HTTP 200 and `{"success": false, "code": 1000}`, which this
+route translates into a real **401** with `{"error": "HTTP_401"}`. When only some endpoints
+fail, the response stays 200 and the failing entries show their status.
 
 ## Development
 

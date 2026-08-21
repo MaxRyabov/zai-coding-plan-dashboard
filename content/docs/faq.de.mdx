@@ -14,7 +14,11 @@ Das Z.AI Nutzungs-Dashboard ist eine Webanwendung, die Ihnen hilft, Ihre GLM-Cod
 
 ### Wird mein API-Schlüssel gespeichert?
 
-Nein, Ihr API-Schlüssel wird nur für Anfragen an Z.AI-Server verwendet und nicht auf unseren Servern gespeichert. Er wird während Ihrer Sitzung vorübergehend im Speicher Ihres Browsers aufbewahrt.
+Ja, aber nie im Klartext. Ihre Konten werden im Browser mit einem aus dem Master-Passwort abgeleiteten Schlüssel verschlüsselt (PBKDF2-HMAC-SHA256, danach AES-GCM); in `localStorage` landet ausschließlich der Chiffretext. Das Master-Passwort selbst wird nirgends gespeichert — es liegt nur im Arbeitsspeicher, bis Sie den Tresor sperren oder den Tab schließen.
+
+Anfragen an Z.AI laufen über die App-eigene Route `/api/usage`, die den Schlüssel weiterreicht und nichts aufbewahrt.
+
+**Das schützt vor** dem Mitlesen von `localStorage` auf einem geteilten Rechner, einem synchronisierten Browser-Profil und Browser-Backups. **Es schützt nicht vor** in die Seite eingeschleustem Code bei entsperrtem Tresor oder einer bösartigen Browser-Erweiterung.
 
 ### Wie oft wird das Kontingent zurückgesetzt?
 

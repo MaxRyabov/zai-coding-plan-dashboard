@@ -14,7 +14,11 @@ Le Tableau de Bord d'Utilisation Z.AI est une application web qui vous aide à s
 
 ### Ma clé API est-elle stockée ?
 
-Non, votre clé API n'est utilisée que pour faire des requêtes aux serveurs Z.AI et n'est pas stockée sur nos serveurs. Elle est conservée temporairement dans la mémoire de votre navigateur pendant votre session.
+Oui, mais jamais en clair. Vos comptes sont chiffrés dans le navigateur avec une clé dérivée de votre mot de passe maître (PBKDF2-HMAC-SHA256 puis AES-GCM) ; seul le texte chiffré est écrit dans `localStorage`. Le mot de passe maître lui-même n'est jamais enregistré : il reste en mémoire jusqu'au verrouillage du coffre ou à la fermeture de l'onglet.
+
+Les requêtes vers Z.AI passent par la route `/api/usage` de cette application, qui transmet la clé sans rien conserver.
+
+**Cela protège contre** la lecture de `localStorage` sur une machine partagée, un profil de navigateur synchronisé, une sauvegarde du navigateur. **Cela ne protège pas contre** un script injecté dans la page pendant que le coffre est déverrouillé, ni contre une extension malveillante.
 
 ### À quelle fréquence le quota se réinitialise-t-il ?
 

@@ -1,39 +1,90 @@
 {
   "common": {
     "language": "言語",
-    "loading": "読み込み中...",
-    "fetch": "取得",
-    "refresh": "更新"
+    "refresh": "更新",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "edit": "編集",
+    "remove": "削除",
+    "moveUp": "上へ",
+    "moveDown": "下へ",
+    "refreshAll": "すべて更新",
+    "lock": "ロック"
   },
   "timezone": {
     "label": "タイムゾーン",
     "system": "システム"
   },
+  "refresh": {
+    "label": "自動更新",
+    "off": "オフ",
+    "minutes": "{count}分",
+    "lastUpdated": "{time} 更新"
+  },
   "home": {
     "title": "Z.AI Coding ダッシュボード",
     "subtitle": "使用状況分析 & ドキュメント"
   },
+  "vault": {
+    "setupTitle": "マスターパスワードを設定",
+    "setupDescription": "APIキーはこのパスワードで暗号化され、平文のままブラウザーの外に出ることはありません。",
+    "setupWarning": "復旧はできません。パスワードを忘れるとAPIキーの再入力が必要です。",
+    "unlockTitle": "ロック解除",
+    "unlockDescription": "保存済みアカウントを復号するにはマスターパスワードを入力してください。",
+    "password": "マスターパスワード",
+    "confirmPassword": "パスワードの確認",
+    "unlock": "ロック解除",
+    "create": "保管庫を作成",
+    "unlocking": "解除中…",
+    "wrongPassword": "パスワードが違います",
+    "mismatch": "パスワードが一致しません",
+    "tooShort": "{count}文字以上",
+    "corrupt": "保存データを読み取れませんでした。リセットしてやり直してください。",
+    "unsupportedVersion": "この保管庫は新しいバージョンのダッシュボードで作成されています。",
+    "unavailableTitle": "暗号化を利用できません",
+    "unavailable": "Web CryptoはHTTPSまたはlocalhostでのみ利用できます。安全な接続で開いてください。",
+    "migrationNotice": "以前のバージョンのAPIキーが見つかりました。最初のアカウントとして取り込みます。",
+    "forgot": "パスワードをお忘れですか？",
+    "resetWarning": "保存済みのアカウントをすべて削除します。APIキーの再入力が必要になります。",
+    "reset": "削除してやり直す",
+    "saveFailed": "ブラウザーストレージに書き込めませんでした。"
+  },
+  "accounts": {
+    "title": "アカウント",
+    "manage": "管理",
+    "add": "アカウントを追加",
+    "labelPlaceholder": "名前（例：仕事）",
+    "removeConfirm": "「{label}」を削除しますか？APIキーも消去されます。",
+    "duplicate": "このキーは別のアカウントで保存済みです。",
+    "empty": "アカウントがまだありません。"
+  },
   "apiKey": {
-    "title": "API キー",
-    "description": "API キーは Z.AI サーバーへのクエリのみに使用され、保存されません。",
+    "description": "キーはマスターパスワードで暗号化され、このブラウザーにのみ保存されます。",
     "placeholder": "Z.AI API キーを入力してください",
     "paste": "クリップボードから貼り付け",
     "show": "キーを表示",
     "hide": "キーを隠す",
     "invalid": "形式：16進数32文字 + ドット + 英数字16文字"
   },
+  "summary": {
+    "title": "すべてのアカウント",
+    "account": "アカウント",
+    "tokenQuota": "トークン（5時間）",
+    "weekQuota": "トークン（7日）",
+    "mcpQuota": "MCP（月）",
+    "tokens": "トークン 24時間",
+    "tokens7d": "トークン 7日",
+    "calls": "呼び出し 24時間",
+    "total": "合計",
+    "never": "未取得",
+    "partial": "一部のみ取得",
+    "countedFrom": "{total}件中{counted}件",
+    "noActivity": "過去24時間の利用はありません。"
+  },
   "quota": {
     "used": "% 使用済み",
     "remaining": "残り",
     "resetsAt": "{time}にリセット"
-  },
-  "modelUsage": {
-    "title": "モデル使用状況（過去24時間）",
-    "model": "モデル",
-    "requests": "リクエスト",
-    "input": "入力",
-    "output": "出力",
-    "total": "合計"
   },
   "toolUsage": {
     "title": "ツール使用状況（過去24時間）",
@@ -53,12 +104,14 @@
     "calls": "コール",
     "remaining": "残り"
   },
-  "empty": {
-    "title": "API キーを入力",
-    "description": "API キーを入力して「取得」をクリックすると、使用統計が表示されます。"
-  },
   "errors": {
-    "fetchFailed": "使用データの取得に失敗しました"
+    "fetchFailed": "使用データの取得に失敗しました",
+    "invalidKey": "APIキーが無効です",
+    "forbidden": "このAPIキーではアクセスできません",
+    "rateLimited": "Z.AIによりレート制限されました。しばらくしてから再試行してください",
+    "upstream": "Z.AIエラー（{status}）",
+    "unreachable": "Z.AIから応答がありません。接続を確認して再試行してください",
+    "upstreamCode": "Z.AIがコード{code}を返しました"
   },
   "docs": {
     "title": "ドキュメント",
@@ -98,7 +151,7 @@
     "faq": {
       "title": "よくある質問",
       "q1": "API キーは保存されますか？",
-      "a1": "いいえ、API キーはブラウザの localStorage にのみ保存され、Z.AI 公式 API 以外のサーバーには送信されません。",
+      "a1": "保存されますが平文ではありません。キーはブラウザー内でマスターパスワードにより暗号化され、localStorage には暗号文のみが書き込まれます。Z.AI へは本アプリの API ルート経由で送られ、そこには何も保存されません。",
       "q2": "データの更新頻度は？",
       "a2": "取得ボタンをクリックすると、データがリアルタイムで取得されます。いつでも更新できます。",
       "q3": "表示される時間範囲は？",

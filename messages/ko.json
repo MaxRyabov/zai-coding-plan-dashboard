@@ -1,39 +1,90 @@
 {
   "common": {
     "language": "언어",
-    "loading": "로딩 중...",
-    "fetch": "가져오기",
-    "refresh": "새로고침"
+    "refresh": "새로고침",
+    "save": "저장",
+    "cancel": "취소",
+    "edit": "편집",
+    "remove": "삭제",
+    "moveUp": "위로",
+    "moveDown": "아래로",
+    "refreshAll": "전체 새로고침",
+    "lock": "잠금"
   },
   "timezone": {
     "label": "시간대",
     "system": "시스템"
   },
+  "refresh": {
+    "label": "자동 새로고침",
+    "off": "끄기",
+    "minutes": "{count}분",
+    "lastUpdated": "{time} 갱신"
+  },
   "home": {
     "title": "Z.AI Coding 대시보드",
     "subtitle": "사용 현황 분석 & 문서"
   },
+  "vault": {
+    "setupTitle": "마스터 비밀번호 설정",
+    "setupDescription": "API 키는 이 비밀번호로 암호화되며 평문으로 브라우저를 벗어나지 않습니다.",
+    "setupWarning": "복구할 수 없습니다. 비밀번호를 잊으면 API 키를 다시 입력해야 합니다.",
+    "unlockTitle": "잠금 해제",
+    "unlockDescription": "저장된 계정을 복호화하려면 마스터 비밀번호를 입력하세요.",
+    "password": "마스터 비밀번호",
+    "confirmPassword": "비밀번호 확인",
+    "unlock": "잠금 해제",
+    "create": "보관함 만들기",
+    "unlocking": "해제 중…",
+    "wrongPassword": "비밀번호가 올바르지 않습니다",
+    "mismatch": "비밀번호가 일치하지 않습니다",
+    "tooShort": "{count}자 이상",
+    "corrupt": "저장된 데이터를 읽을 수 없습니다. 초기화 후 다시 시작하세요.",
+    "unsupportedVersion": "이 보관함은 최신 버전의 대시보드에서 만들어졌습니다.",
+    "unavailableTitle": "암호화를 사용할 수 없음",
+    "unavailable": "Web Crypto는 HTTPS 또는 localhost에서만 동작합니다. 보안 연결로 열어 주세요.",
+    "migrationNotice": "이전 버전의 API 키를 찾았습니다. 첫 번째 계정으로 가져옵니다.",
+    "forgot": "비밀번호를 잊으셨나요?",
+    "resetWarning": "저장된 모든 계정이 삭제됩니다. API 키를 다시 입력해야 합니다.",
+    "reset": "삭제하고 다시 시작",
+    "saveFailed": "브라우저 저장소에 쓸 수 없습니다."
+  },
+  "accounts": {
+    "title": "계정",
+    "manage": "관리",
+    "add": "계정 추가",
+    "labelPlaceholder": "이름(예: 업무)",
+    "removeConfirm": "“{label}”을(를) 삭제할까요? API 키도 함께 지워집니다.",
+    "duplicate": "이 키는 다른 계정에 이미 저장되어 있습니다.",
+    "empty": "아직 계정이 없습니다."
+  },
   "apiKey": {
-    "title": "API 키",
-    "description": "API 키는 Z.AI 서버 쿼리에만 사용되며 저장되지 않습니다.",
+    "description": "키는 마스터 비밀번호로 암호화되어 이 브라우저에만 저장됩니다.",
     "placeholder": "Z.AI API 키를 입력하세요",
     "paste": "클립보드에서 붙여넣기",
     "show": "키 표시",
     "hide": "키 숨기기",
     "invalid": "형식: 16진수 32자 + 점 + 영숫자 16자"
   },
+  "summary": {
+    "title": "전체 계정",
+    "account": "계정",
+    "tokenQuota": "토큰(5시간)",
+    "weekQuota": "토큰(7일)",
+    "mcpQuota": "MCP(월)",
+    "tokens": "토큰 24시간",
+    "tokens7d": "토큰 7일",
+    "calls": "호출 24시간",
+    "total": "합계",
+    "never": "불러오지 않음",
+    "partial": "일부 데이터",
+    "countedFrom": "{total}개 중 {counted}개",
+    "noActivity": "지난 24시간 동안 활동이 없습니다."
+  },
   "quota": {
     "used": "% 사용됨",
     "remaining": "남음",
     "resetsAt": "{time}에 재설정"
-  },
-  "modelUsage": {
-    "title": "모델 사용 현황 (최근 24시간)",
-    "model": "모델",
-    "requests": "요청",
-    "input": "입력",
-    "output": "출력",
-    "total": "합계"
   },
   "toolUsage": {
     "title": "도구 사용 현황 (최근 24시간)",
@@ -53,12 +104,14 @@
     "calls": "호출",
     "remaining": "남음"
   },
-  "empty": {
-    "title": "API 키 입력",
-    "description": "API 키를 입력하고 \"가져오기\"를 클릭하여 사용 통계를 확인하세요."
-  },
   "errors": {
-    "fetchFailed": "사용 데이터를 가져오지 못했습니다"
+    "fetchFailed": "사용 데이터를 가져오지 못했습니다",
+    "invalidKey": "API 키가 유효하지 않습니다",
+    "forbidden": "이 API 키로는 접근할 수 없습니다",
+    "rateLimited": "Z.AI의 요청 제한에 걸렸습니다. 잠시 후 다시 시도하세요",
+    "upstream": "Z.AI 오류({status})",
+    "unreachable": "Z.AI가 응답하지 않았습니다. 연결을 확인하고 다시 시도하세요",
+    "upstreamCode": "Z.AI가 코드 {code}을(를) 반환했습니다"
   },
   "docs": {
     "title": "문서",
@@ -98,7 +151,7 @@
     "faq": {
       "title": "자주 묻는 질문",
       "q1": "API 키가 저장되나요?",
-      "a1": "아니요, API 키는 브라우저의 localStorage에만 저장되며 Z.AI 공식 API 이외의 서버에는 전송되지 않습니다.",
+      "a1": "저장되지만 평문은 아닙니다. 키는 브라우저에서 마스터 비밀번호로 암호화되며 localStorage에는 암호문만 기록됩니다. Z.AI로는 이 앱의 API 경로를 통해 전달되며 그곳에는 아무것도 저장되지 않습니다.",
       "q2": "데이터 업데이트 빈도는?",
       "a2": "가져오기 버튼을 클릭하면 데이터가 실시간으로 가져옵니다. 언제든지 새로고침할 수 있습니다.",
       "q3": "표시되는 시간 범위는?",

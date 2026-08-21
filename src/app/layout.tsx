@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { UsageProvider } from '@/components/UsageContext';
+import { VaultProvider } from '@/components/VaultContext';
+import { AccountsUsageProvider } from '@/components/AccountsUsageContext';
 import { TimezoneProvider } from '@/components/TimezoneContext';
 
 const geistSans = Geist({
@@ -24,9 +25,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <TimezoneProvider>
-          <UsageProvider>
-            {children}
-          </UsageProvider>
+          <VaultProvider>
+            <AccountsUsageProvider>
+              {children}
+            </AccountsUsageProvider>
+          </VaultProvider>
         </TimezoneProvider>
       </body>
     </html>

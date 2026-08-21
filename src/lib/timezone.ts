@@ -109,3 +109,18 @@ export function parseWallClock(value: string, timeZone: string): number | null {
   const guess = asUtc - getUtcOffsetMinutes(timeZone, new Date(asUtc)) * 60000;
   return asUtc - getUtcOffsetMinutes(timeZone, new Date(guess)) * 60000;
 }
+
+/**
+ * An hour-aligned "last N days" window expressed in Beijing wall clock — anywhere else and
+ * the window is skewed by the browser's offset.
+ *
+ * Compute it once per refresh and pass it to every account: recomputing per account would
+ * straddle an hour boundary mid-fetch and make the aggregate row sum mismatched intervals.
+ */
+export function buildUsageWindow(now: Date = new Date(), days = 1): { startTime: string; endTime: string } {
+  const toHourBoundary = (date: Date, suffix: string) => `${formatWallClock(date, ZAI_TIMEZONE).slice(0, 13)}:${suffix}`;
+  return {
+    startTime: toHourBoundary(new Date(now.getTime() - days * 24 * 60 * 60 * 1000), '00:00'),
+    endTime: toHourBoundary(now, '59:59'),
+  };
+}

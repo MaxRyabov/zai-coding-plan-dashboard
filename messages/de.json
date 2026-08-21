@@ -1,39 +1,90 @@
 {
   "common": {
     "language": "Sprache",
-    "loading": "Laden...",
-    "fetch": "Abrufen",
-    "refresh": "Aktualisieren"
+    "refresh": "Aktualisieren",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "remove": "Entfernen",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "refreshAll": "Alle aktualisieren",
+    "lock": "Sperren"
   },
   "timezone": {
     "label": "Zeitzone",
     "system": "System"
   },
+  "refresh": {
+    "label": "Auto-Aktualisierung",
+    "off": "Aus",
+    "minutes": "{count} Min.",
+    "lastUpdated": "Aktualisiert {time}"
+  },
   "home": {
     "title": "Z.AI Coding Dashboard",
     "subtitle": "Nutzungsanalyse & Dokumentation"
   },
+  "vault": {
+    "setupTitle": "Master-Passwort festlegen",
+    "setupDescription": "Deine API-Schlüssel werden damit verschlüsselt und verlassen diesen Browser nie im Klartext.",
+    "setupWarning": "Keine Wiederherstellung möglich. Wer das Passwort vergisst, muss alle API-Schlüssel neu eingeben.",
+    "unlockTitle": "Entsperren",
+    "unlockDescription": "Gib dein Master-Passwort ein, um die gespeicherten Konten zu entschlüsseln.",
+    "password": "Master-Passwort",
+    "confirmPassword": "Passwort wiederholen",
+    "unlock": "Entsperren",
+    "create": "Tresor anlegen",
+    "unlocking": "Entsperren…",
+    "wrongPassword": "Falsches Passwort",
+    "mismatch": "Die Passwörter stimmen nicht überein",
+    "tooShort": "Mindestens {count} Zeichen",
+    "corrupt": "Die gespeicherten Daten konnten nicht gelesen werden. Zurücksetzen und neu beginnen.",
+    "unsupportedVersion": "Dieser Tresor stammt aus einer neueren Version des Dashboards.",
+    "unavailableTitle": "Verschlüsselung nicht verfügbar",
+    "unavailable": "Web Crypto funktioniert nur über HTTPS oder auf localhost. Öffne das Dashboard über eine sichere Verbindung.",
+    "migrationNotice": "Ein API-Schlüssel aus der vorherigen Version wurde gefunden und wird als erstes Konto übernommen.",
+    "forgot": "Passwort vergessen?",
+    "resetWarning": "Damit werden alle gespeicherten Konten gelöscht. Du musst deine API-Schlüssel neu eingeben.",
+    "reset": "Löschen und neu beginnen",
+    "saveFailed": "Schreiben in den Browser-Speicher fehlgeschlagen."
+  },
+  "accounts": {
+    "title": "Konten",
+    "manage": "Verwalten",
+    "add": "Konto hinzufügen",
+    "labelPlaceholder": "Name, z. B. Arbeit",
+    "removeConfirm": "„{label}“ entfernen? Der API-Schlüssel wird gelöscht.",
+    "duplicate": "Dieser Schlüssel ist bereits einem anderen Konto zugeordnet.",
+    "empty": "Noch keine Konten."
+  },
   "apiKey": {
-    "title": "API-Schlüssel",
-    "description": "Ihr API-Schlüssel wird nur zum Abfragen der Z.AI-Server verwendet und nicht gespeichert.",
+    "description": "Schlüssel werden mit deinem Master-Passwort verschlüsselt und nur in diesem Browser gespeichert.",
     "placeholder": "Geben Sie Ihren Z.AI API-Schlüssel ein",
     "paste": "Aus Zwischenablage einfügen",
     "show": "Schlüssel anzeigen",
     "hide": "Schlüssel verbergen",
     "invalid": "Format: 32 hexadezimale Zeichen + Punkt + 16 alphanumerische Zeichen"
   },
+  "summary": {
+    "title": "Alle Konten",
+    "account": "Konto",
+    "tokenQuota": "Tokens (5 Std.)",
+    "weekQuota": "Tokens (7 Tage)",
+    "mcpQuota": "MCP (Monat)",
+    "tokens": "Tokens 24 Std.",
+    "tokens7d": "Tokens 7 Tage",
+    "calls": "Aufrufe 24 Std.",
+    "total": "Gesamt",
+    "never": "Nicht geladen",
+    "partial": "Teildaten",
+    "countedFrom": "{counted} von {total} Konten",
+    "noActivity": "Keine Aktivität in den letzten 24 Stunden."
+  },
   "quota": {
     "used": "% verwendet",
     "remaining": "verbleibend",
     "resetsAt": "Zurücksetzung um {time}"
-  },
-  "modelUsage": {
-    "title": "Modellnutzung (Letzte 24h)",
-    "model": "Modell",
-    "requests": "Anfragen",
-    "input": "Eingabe",
-    "output": "Ausgabe",
-    "total": "Gesamt"
   },
   "toolUsage": {
     "title": "Tool-Nutzung (Letzte 24h)",
@@ -53,12 +104,14 @@
     "calls": "Aufrufe",
     "remaining": "Verbleibend"
   },
-  "empty": {
-    "title": "API-Schlüssel eingeben",
-    "description": "Geben Sie Ihren API-Schlüssel ein und klicken Sie auf \"Abrufen\", um Ihre Nutzungsstatistiken anzuzeigen."
-  },
   "errors": {
-    "fetchFailed": "Fehler beim Abrufen der Nutzungsdaten"
+    "fetchFailed": "Fehler beim Abrufen der Nutzungsdaten",
+    "invalidKey": "Ungültiger API-Schlüssel",
+    "forbidden": "Zugriff für diesen API-Schlüssel verweigert",
+    "rateLimited": "Von Z.AI gedrosselt — später erneut versuchen",
+    "upstream": "Z.AI-Fehler ({status})",
+    "unreachable": "Z.AI hat nicht geantwortet — Verbindung prüfen und erneut versuchen",
+    "upstreamCode": "Z.AI meldet Code {code}"
   },
   "docs": {
     "title": "Dokumentation",
@@ -97,8 +150,8 @@
     },
     "faq": {
       "title": "Häufig gestellte Fragen",
-      "q1": "Wird mein API-Schlüssel gespeichert?",
-      "a1": "Nein, Ihr API-Schlüssel wird nur im localStorage Ihres Browsers gespeichert und niemals an einen Server außer der offiziellen Z.AI-API gesendet.",
+      "q1": "Werden meine API-Schlüssel gespeichert?",
+      "a1": "Ja, aber nie im Klartext. Die Schlüssel werden im Browser mit Ihrem Master-Passwort verschlüsselt, in localStorage landet nur der Chiffretext. Zu Z.AI gelangen sie über die App-eigene API-Route, die nichts speichert.",
       "q2": "Wie oft werden die Daten aktualisiert?",
       "a2": "Die Daten werden in Echtzeit abgerufen, wenn Sie auf die Schaltfläche Abrufen klicken. Sie können jederzeit aktualisieren.",
       "q3": "Welcher Zeitbereich wird angezeigt?",

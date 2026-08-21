@@ -8,36 +8,36 @@ import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
 import SearchDialog from '@/components/SearchDialog';
 
+// The second argument is the locale map itself — wrapping it in `{ translations: … }` type-errors
+// and silently leaves every localized docs label on its English default.
 const { provider } = defineI18nUI(i18n, {
-  translations: {
-    en: {
-      displayName: 'English',
-    },
-    'zh-CN': {
-      displayName: '简体中文',
-      toc: '目录',
-      search: '搜索文档',
-      lastUpdate: '最后更新于',
-      searchNoResult: '没有结果',
-      previousPage: '上一页',
-      nextPage: '下一页',
-      chooseLanguage: '选择语言',
-    },
-    ja: {
-      displayName: '日本語',
-    },
-    ko: {
-      displayName: '한国어',
-    },
-    es: {
-      displayName: 'Español',
-    },
-    fr: {
-      displayName: 'Français',
-    },
-    de: {
-      displayName: 'Deutsch',
-    },
+  en: {
+    displayName: 'English',
+  },
+  'zh-CN': {
+    displayName: '简体中文',
+    toc: '目录',
+    search: '搜索文档',
+    lastUpdate: '最后更新于',
+    searchNoResult: '没有结果',
+    previousPage: '上一页',
+    nextPage: '下一页',
+    chooseLanguage: '选择语言',
+  },
+  ja: {
+    displayName: '日本語',
+  },
+  ko: {
+    displayName: '한국어',
+  },
+  es: {
+    displayName: 'Español',
+  },
+  fr: {
+    displayName: 'Français',
+  },
+  de: {
+    displayName: 'Deutsch',
   },
 });
 

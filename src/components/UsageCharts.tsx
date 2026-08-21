@@ -6,14 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTimezone } from '@/components/TimezoneContext';
-
-interface TimeSeriesItem {
-  time: string;
-  fullTime: string;
-  timestamp: number | null;
-  calls: number;
-  tokens: number;
-}
+import type { ModelUsageData, QuotaLimitItem } from '@/lib/usage';
 
 function tooltipLabel(label: unknown, payload: ReadonlyArray<{ payload?: unknown }> | undefined) {
   const point = payload?.[0]?.payload as { fullLabel?: string } | undefined;
@@ -30,17 +23,6 @@ function safeFormatter(locale: string, timeZone: string, options: Intl.DateTimeF
   } catch {
     return new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' });
   }
-}
-
-interface ModelUsageData {
-  timeSeries: TimeSeriesItem[];
-  totalCalls: number;
-  totalTokens: number;
-}
-
-interface QuotaLimitItem {
-  type: string;
-  percentage: number;
 }
 
 interface UsageChartsProps {

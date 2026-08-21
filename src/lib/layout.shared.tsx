@@ -1,9 +1,9 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { i18n } from './i18n';
 
 export function baseOptions(locale: string): BaseLayoutProps {
   return {
-    i18n,
+    // No `i18n` here: the option is deprecated, RootProvider already supplies the config, and
+    // the object carries a `translations` function that cannot cross into a Client Component.
     nav: {
       title: 'Z.AI Usage Dashboard',
     },

@@ -1,39 +1,90 @@
 {
   "common": {
     "language": "Langue",
-    "loading": "Chargement...",
-    "fetch": "Récupérer",
-    "refresh": "Actualiser"
+    "refresh": "Actualiser",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "remove": "Supprimer",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "refreshAll": "Tout actualiser",
+    "lock": "Verrouiller"
   },
   "timezone": {
     "label": "Fuseau horaire",
     "system": "Système"
   },
+  "refresh": {
+    "label": "Actualisation auto",
+    "off": "Désactivée",
+    "minutes": "{count} min",
+    "lastUpdated": "Actualisé à {time}"
+  },
   "home": {
     "title": "Tableau de Bord Z.AI Coding",
     "subtitle": "Analyse d'Utilisation & Documentation"
   },
+  "vault": {
+    "setupTitle": "Définir un mot de passe maître",
+    "setupDescription": "Vos clés API sont chiffrées avec ce mot de passe et ne quittent jamais ce navigateur en clair.",
+    "setupWarning": "Aucune récupération possible. Mot de passe oublié, clés API à ressaisir.",
+    "unlockTitle": "Déverrouiller",
+    "unlockDescription": "Saisissez votre mot de passe maître pour déchiffrer les comptes enregistrés.",
+    "password": "Mot de passe maître",
+    "confirmPassword": "Répétez le mot de passe",
+    "unlock": "Déverrouiller",
+    "create": "Créer le coffre",
+    "unlocking": "Déverrouillage…",
+    "wrongPassword": "Mot de passe incorrect",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "tooShort": "Au moins {count} caractères",
+    "corrupt": "Impossible de lire les données enregistrées. Réinitialisez pour repartir de zéro.",
+    "unsupportedVersion": "Ce coffre a été écrit par une version plus récente du tableau de bord.",
+    "unavailableTitle": "Chiffrement indisponible",
+    "unavailable": "Web Crypto ne fonctionne qu’en HTTPS ou sur localhost. Ouvrez le tableau de bord via une connexion sécurisée.",
+    "migrationNotice": "Une clé API de la version précédente a été trouvée. Elle sera importée comme premier compte.",
+    "forgot": "Mot de passe oublié ?",
+    "resetWarning": "Cela supprime tous les comptes enregistrés. Vous devrez ressaisir vos clés API.",
+    "reset": "Supprimer et recommencer",
+    "saveFailed": "Impossible d’écrire dans le stockage du navigateur."
+  },
+  "accounts": {
+    "title": "Comptes",
+    "manage": "Gérer",
+    "add": "Ajouter un compte",
+    "labelPlaceholder": "Nom, par ex. Travail",
+    "removeConfirm": "Supprimer « {label} » ? Sa clé API sera effacée.",
+    "duplicate": "Cette clé est déjà enregistrée sur un autre compte.",
+    "empty": "Aucun compte pour l’instant."
+  },
   "apiKey": {
-    "title": "Clé API",
-    "description": "Votre clé API est uniquement utilisée pour interroger les serveurs Z.AI et n'est pas stockée.",
+    "description": "Les clés sont chiffrées avec votre mot de passe maître et conservées uniquement dans ce navigateur.",
     "placeholder": "Entrez votre clé API Z.AI",
     "paste": "Coller depuis le presse-papiers",
     "show": "Afficher la clé",
     "hide": "Masquer la clé",
     "invalid": "Format : 32 caractères hexadécimaux + point + 16 caractères alphanumériques"
   },
+  "summary": {
+    "title": "Tous les comptes",
+    "account": "Compte",
+    "tokenQuota": "Jetons (5 h)",
+    "weekQuota": "Jetons (7 j)",
+    "mcpQuota": "MCP (mois)",
+    "tokens": "Jetons 24 h",
+    "tokens7d": "Jetons 7 j",
+    "calls": "Appels 24 h",
+    "total": "Total",
+    "never": "Non chargé",
+    "partial": "Données partielles",
+    "countedFrom": "{counted} comptes sur {total}",
+    "noActivity": "Aucune activité ces dernières 24 heures."
+  },
   "quota": {
     "used": "% utilisé",
     "remaining": "restant",
     "resetsAt": "Réinitialisation à {time}"
-  },
-  "modelUsage": {
-    "title": "Utilisation des Modèles (Dernières 24h)",
-    "model": "Modèle",
-    "requests": "Requêtes",
-    "input": "Entrée",
-    "output": "Sortie",
-    "total": "Total"
   },
   "toolUsage": {
     "title": "Utilisation des Outils (Dernières 24h)",
@@ -53,12 +104,14 @@
     "calls": "appels",
     "remaining": "Restant"
   },
-  "empty": {
-    "title": "Entrez votre Clé API",
-    "description": "Entrez votre clé API et cliquez sur \"Récupérer\" pour voir vos statistiques d'utilisation."
-  },
   "errors": {
-    "fetchFailed": "Échec de la récupération des données d'utilisation"
+    "fetchFailed": "Échec de la récupération des données d'utilisation",
+    "invalidKey": "Clé API invalide",
+    "forbidden": "Accès refusé pour cette clé API",
+    "rateLimited": "Trop de requêtes vers Z.AI — réessayez plus tard",
+    "upstream": "Erreur Z.AI ({status})",
+    "unreachable": "Z.AI n'a pas répondu — vérifiez la connexion et réessayez",
+    "upstreamCode": "Z.AI a renvoyé le code {code}"
   },
   "docs": {
     "title": "Documentation",
@@ -97,8 +150,8 @@
     },
     "faq": {
       "title": "Questions Fréquentes",
-      "q1": "Ma clé API est-elle stockée ?",
-      "a1": "Non, votre clé API est uniquement stockée dans le localStorage de votre navigateur et n'est jamais envoyée à aucun serveur sauf l'API officielle de Z.AI.",
+      "q1": "Mes clés API sont-elles stockées ?",
+      "a1": "Oui, mais jamais en clair. Les clés sont chiffrées dans votre navigateur avec votre mot de passe maître et seul le texte chiffré est écrit dans localStorage. Elles atteignent Z.AI via la route API de cette application, qui ne conserve rien.",
       "q2": "À quelle fréquence les données sont-elles mises à jour ?",
       "a2": "Les données sont récupérées en temps réel lorsque vous cliquez sur le bouton Récupérer. Vous pouvez actualiser à tout moment.",
       "q3": "Quelle plage de temps est affichée ?",
