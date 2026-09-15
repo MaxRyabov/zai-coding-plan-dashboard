@@ -7,23 +7,39 @@ export interface TimeSeriesItem {
   tokens: number;
 }
 
+export interface ModelTokens {
+  name: string;
+  tokens: number;
+}
+
 export interface ModelUsageData {
   timeSeries: TimeSeriesItem[];
   totalCalls: number;
   totalTokens: number;
+  /** Per-model tokens over the same window, largest first. Empty when Z.AI sent no breakdown. */
+  models?: ModelTokens[];
 }
 
 export interface ToolUsageItem {
   tool: string;
   callCount: number;
-  successCount: number;
-  failureCount: number;
+  /** Only the pre-2026-09 tool-usage payload carried these. */
+  successCount?: number;
+  failureCount?: number;
 }
 
+/** What the absolute numbers of a limit count; absent when Z.AI reports a percentage only. */
+export type QuotaMeasure = 'credits' | 'calls';
+
+/** `credits` for plans capped by an absolute credit budget, `tokens` for the percentage-only plans. */
+export type QuotaBilling = 'credits' | 'tokens';
+
 export interface QuotaLimitItem {
-  /** Stable discriminator; `type` is a display label and must not be matched on. */
+  /** Stable discriminator: `tokens` is the 5-hour window, `week` the 7-day one, `mcp` the monthly call cap. */
   kind?: 'tokens' | 'week' | 'mcp' | 'other';
+  /** Z.AI's own type: `TOKENS_LIMIT`, `CREDIT_LIMIT`, `TIME_LIMIT`. Not a display label. */
   type: string;
+  measure?: QuotaMeasure;
   percentage: number;
   currentUsage?: number;
   total?: number;
@@ -39,6 +55,7 @@ export interface UpstreamStatus {
   quotaLimit: number | null;
   /** Only present when an extended window was asked for. */
   extendedUsage?: number | null;
+  activity?: number | null;
 }
 
 /**
@@ -63,11 +80,23 @@ export interface ExtendedUsageData {
   totalTokens: number;
 }
 
+/** Lifetime-style counters from `credit-usage/activity`, over the last 365 Beijing calendar days. */
+export interface ActivitySummary {
+  totalTokens: number;
+  peakDailyTokens: number;
+  /** `YYYY-MM-DD`, Beijing calendar day; null when there was no usage at all. */
+  peakDailyTokensDate: string | null;
+  totalUsageDurationMs: number;
+  currentStreakDays: number;
+  longestStreakDays: number;
+}
+
 export interface UsageData {
   modelUsage?: ModelUsageData | null;
   toolUsage?: ToolUsageItem[] | null;
-  quotaLimit?: { limits: QuotaLimitItem[] } | null;
+  quotaLimit?: { limits: QuotaLimitItem[]; billing?: QuotaBilling; level?: string } | null;
   extendedUsage?: ExtendedUsageData | null;
+  activity?: ActivitySummary | null;
   upstream?: UpstreamDetail;
 }
 

@@ -69,8 +69,8 @@
   "summary": {
     "title": "すべてのアカウント",
     "account": "アカウント",
-    "tokenQuota": "トークン（5時間）",
-    "weekQuota": "トークン（7日）",
+    "tokenQuota": "5時間上限",
+    "weekQuota": "週間上限",
     "mcpQuota": "MCP（月）",
     "tokens": "トークン 24時間",
     "tokens7d": "トークン 7日",
@@ -84,7 +84,29 @@
   "quota": {
     "used": "% 使用済み",
     "remaining": "残り",
-    "resetsAt": "{time}にリセット"
+    "resetsAt": "{time}にリセット",
+    "kindTokens": "5時間の上限",
+    "kindWeek": "週間の上限",
+    "kindMcp": "MCP（月間）",
+    "credits": "クレジット",
+    "calls": "回"
+  },
+  "plan": {
+    "credits": "クレジット",
+    "tokens": "トークン",
+    "creditsHint": "クレジット制プラン：上限は固定のクレジット枠です",
+    "tokensHint": "トークン制プラン：上限は割合でのみ表示されます"
+  },
+  "activity": {
+    "title": "アクティビティ（365日）",
+    "totalTokens": "累計トークン",
+    "peakTokens": "ピーク日",
+    "peakTokensOn": "ピーク日 {date}",
+    "duration": "累計利用時間",
+    "currentStreak": "現在の連続日数",
+    "longestStreak": "最長連続日数",
+    "days": "{count}日",
+    "hoursMinutes": "{hours}時間{minutes}分"
   },
   "toolUsage": {
     "title": "ツール使用状況（過去24時間）",

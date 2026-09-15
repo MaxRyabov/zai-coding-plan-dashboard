@@ -1,21 +1,25 @@
 ---
 title: API Reference
-description: Technical documentation for the Z.AI Usage API endpoints
+description: The Z.AI monitoring endpoints the dashboard reads, and the shapes they return
 icon: Code
 ---
 
-This page documents the Z.AI API endpoints used by the dashboard.
+This page documents the Z.AI endpoints the dashboard calls. They are **undocumented by Z.AI**:
+everything here was observed on real responses from GLM Coding Plan accounts (last checked
+2026-09-15). The full field notes, with the evidence behind each claim, live in
+[`docs/zai-api.md`](https://github.com/MaxRyabov/zai-coding-plan-dashboard/blob/main/docs/zai-api.md).
 
 ## Authentication
 
-All API requests require authentication using a Bearer token:
+Every request is a `GET` with a Bearer token:
 
 ```bash
 Authorization: Bearer YOUR_API_KEY
+Accept-Language: en-US,en
 ```
 
 <Callout type="warn">
-Keep your API key secure and never expose it in client-side code.
+Keep your API key secure. The dashboard only sends it to its own `/api/usage` route, which calls Z.AI server-side.
 </Callout>
 
 ## Base URL
@@ -24,127 +28,233 @@ Keep your API key secure and never expose it in client-side code.
 https://api.z.ai
 ```
 
+## Response envelope
+
+Every endpoint wraps its payload:
+
+```json
+{ "code": 200, "msg": "Operation successful", "success": true, "data": { ... } }
+```
+
+<Callout type="error">
+**A rejected key returns HTTP 200, not 401.** Failure is signalled by `"success": false` and a business `code`. Checking the HTTP status alone makes a dead key look like an idle one.
+</Callout>
+
+| `code` | When | Dashboard maps it to |
+|--------|------|----------------------|
+| `1000` | Key is well-formed but not accepted | 401 |
+| `1001` | No `Authorization` header | 401 |
+| `401` | Token could not be parsed | 401 |
+| `500` | Path does not exist (`404 NOT_FOUND`) | 502 |
+
+The `msg` text arrives in English or Chinese regardless of `Accept-Language`, so map `code`, never show `msg`.
+
+## Time parameters
+
+`startTime` and `endTime` are `YYYY-MM-DD HH:mm:ss` strings interpreted as **Beijing time
+(`Asia/Shanghai`)**, wherever the caller is. Both must be given together.
+
+## Two plan types
+
+| | Token-based plan | Credit-based plan |
+|---|---|---|
+| Limit type | `TOKENS_LIMIT` | `CREDIT_LIMIT` |
+| 5-hour and weekly limits | Percentage only | Percentage plus absolute credits |
+| MCP limit | Separate monthly `TIME_LIMIT` | None — MCP spends the same credits |
+
+Usage, tool and activity endpoints return the same shapes on both plans.
+
 ## Endpoints
 
-<Tabs items={['Model Usage', 'Tool Usage', 'Quota Limit']}>
-<Tab value="Model Usage">
-
-### Get Model Usage
-
-Retrieve model usage statistics for a time period.
-
-```http
-GET /api/monitor/usage/model-usage
-```
-
-**Query Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| startTime | string | Start time (format: `YYYY-MM-DD HH:mm:ss`) |
-| endTime | string | End time (format: `YYYY-MM-DD HH:mm:ss`) |
-
-**Response:**
-
-```json
-{
-  "data": [
-    {
-      "model": "glm-4.7",
-      "inputTokens": 12345,
-      "outputTokens": 6789,
-      "totalTokens": 19134,
-      "requestCount": 42
-    }
-  ]
-}
-```
-
-</Tab>
-<Tab value="Tool Usage">
-
-### Get Tool Usage
-
-Retrieve tool usage statistics.
-
-```http
-GET /api/monitor/usage/tool-usage
-```
-
-**Query Parameters:**
-
-Same as Model Usage endpoint.
-
-**Response:**
-
-```json
-{
-  "data": [
-    {
-      "tool": "code_execution",
-      "callCount": 100,
-      "successCount": 95,
-      "failureCount": 5
-    }
-  ]
-}
-```
-
-</Tab>
+<Tabs items={['Quota Limit', 'Model Usage', 'Tool Usage', 'Activity']}>
 <Tab value="Quota Limit">
 
-### Get Quota Limit
+### Get quota limits
 
-Retrieve current quota and usage limits.
+Current state of every limit. No parameters.
 
 ```http
 GET /api/monitor/usage/quota/limit
 ```
 
-**Response:**
+**Token-based plan:**
 
 ```json
 {
-  "data": {
-    "limits": [
-      {
-        "type": "TOKENS_LIMIT",
-        "percentage": 45.5
-      },
-      {
-        "type": "TIME_LIMIT",
-        "percentage": 20.0,
-        "currentValue": 200,
-        "usage": 1000
-      }
-    ]
-  }
+  "limits": [
+    { "type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 64, "nextResetTime": 1789472583274 },
+    { "type": "TOKENS_LIMIT", "unit": 6, "number": 1, "percentage": 100, "nextResetTime": 1789470235980 },
+    {
+      "type": "TIME_LIMIT", "unit": 5, "number": 1, "percentage": 1,
+      "usage": 4000, "currentValue": 15, "remaining": 3985, "nextResetTime": 1790593435997,
+      "usageDetails": [{ "modelCode": "search-prime", "usage": 13 }, { "modelCode": "web-reader", "usage": 2 }]
+    }
+  ],
+  "level": "max"
 }
 ```
+
+**Credit-based plan:**
+
+```json
+{
+  "limits": [
+    {
+      "type": "CREDIT_LIMIT", "unit": 3, "number": 5, "percentage": 11,
+      "usage": 28000, "currentValue": 3219, "remaining": 24780, "nextResetTime": 1789482908408
+    },
+    {
+      "type": "CREDIT_LIMIT", "unit": 6, "number": 1, "percentage": 2,
+      "usage": 140000, "currentValue": 3219, "remaining": 136780, "nextResetTime": 1790062251984
+    }
+  ],
+  "level": "max"
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `type` | `TOKENS_LIMIT`, `CREDIT_LIMIT` or `TIME_LIMIT` (MCP calls) |
+| `unit` | Period unit: `3` hours, `6` weeks, `5` months |
+| `number` | Units per window: `unit: 3, number: 5` is the 5-hour window |
+| `percentage` | Integer percent consumed |
+| `currentValue` | Amount used (credits or calls) |
+| `usage` | **The cap**, not the amount used — the naming is inverted |
+| `remaining` | Cap minus used |
+| `nextResetTime` | Epoch milliseconds |
+| `level` | Plan tier: `lite`, `pro`, `max` |
+
+<Callout type="info">
+Tell the windows apart by `unit`, never by reset time: late in a weekly cycle the weekly limit can reset before the 5-hour one. Payloads from before September 2026 had no `unit`; there the array order (5-hour, weekly, MCP) is the only reliable signal.
+</Callout>
+
+</Tab>
+<Tab value="Model Usage">
+
+### Get model usage
+
+Hourly token and call counts for a time range.
+
+```http
+GET /api/monitor/usage/model-usage?startTime=2026-09-14 18:00:00&endTime=2026-09-15 18:59:59
+```
+
+**Response** — columnar: parallel arrays sharing one index.
+
+```json
+{
+  "x_time": ["2026-09-15 17:00", "2026-09-15 18:00"],
+  "modelCallCount": [97, 91],
+  "tokensUsage": [11852025, 9583075],
+  "totalUsage": { "totalModelCallCount": 188, "totalTokensUsage": 21435100 },
+  "modelDataList": [
+    { "modelName": "GLM-5.3", "sortOrder": 1, "tokensUsage": [11852025, 9581795], "totalTokens": 21433820 },
+    { "modelName": "GLM-5.3-Flash", "sortOrder": 2, "tokensUsage": [0, 1280], "totalTokens": 1280 }
+  ],
+  "granularity": "hourly"
+}
+```
+
+- `x_time` is Beijing time, `YYYY-MM-DD HH:mm` (no seconds since September 2026).
+- Every hour of the range is returned, zero hours included.
+- `totalUsage` covers the whole range and equals the sum of the series.
+- Per-model `totalTokens` is **not** bounded by the requested hours — sum `modelDataList[].tokensUsage` instead.
+
+</Tab>
+<Tab value="Tool Usage">
+
+### Get tool usage
+
+Hourly MCP tool calls for a time range. Same parameters as model usage.
+
+```http
+GET /api/monitor/usage/tool-usage?startTime=...&endTime=...
+```
+
+```json
+{
+  "x_time": ["2026-09-15 14:00", "2026-09-15 15:00"],
+  "networkSearchCount": [0, 1],
+  "webReadMcpCount": [0, 0],
+  "zreadMcpCount": [0, 0],
+  "toolDataList": [
+    { "toolCode": "search-prime", "toolNameI18n": "Web Search MCP", "usageCount": [0, 1], "totalUsageCount": 1 }
+  ],
+  "toolSummaryList": [
+    { "toolCode": "search-prime", "toolName": "联网搜索 MCP", "toolNameI18n": "Web Search MCP", "totalUsageCount": 1, "sortOrder": 1 }
+  ],
+  "granularity": "hourly"
+}
+```
+
+- `toolName` is always Chinese; the English name is `toolNameI18n`.
+- Success and failure counts are no longer reported.
+
+</Tab>
+<Tab value="Activity">
+
+### Get activity
+
+Daily totals and streaks — the *Activity* block of Z.AI's own dashboard. Works on both plan types.
+
+```http
+GET /api/monitor/credit-usage/activity?startTime=2025-09-15 00:00:00&endTime=2026-09-15 23:59:59&type=1
+```
+
+`type=1` is the personal view. Z.AI's dashboard requests whole days, 365 days back through today.
+
+```json
+{
+  "granularity": "DAY",
+  "timezone": "Asia/Shanghai",
+  "summary": {
+    "totalTokens": 7861995903,
+    "peakDailyTokens": 298081078,
+    "peakDailyTokensDate": "2026-07-07",
+    "totalUsageDurationMs": 1957677158,
+    "currentStreakDays": 1,
+    "longestStreakDays": 37
+  },
+  "series": [
+    { "date": "2026-09-15", "totalCredits": "3219.1337", "totalTokens": 21435100, "mcpCalls": 0 }
+  ]
+}
+```
+
+- `series` has one entry per day, zero days included.
+- Credit amounts are decimal **strings**; on token-based plans they are always `"0.0000"`.
 
 </Tab>
 </Tabs>
 
-## Error Handling
+## Dashboard proxy: `POST /api/usage`
 
-The API returns standard HTTP status codes:
+The dashboard never calls Z.AI from the browser. Its own route takes the key and the time
+windows, calls the endpoints above in parallel and returns one normalized object.
 
-| Code | Description | Action |
-|------|-------------|--------|
-| 200 | Success | Request completed successfully |
-| 400 | Bad Request | Check your request parameters |
-| 401 | Unauthorized | Verify your API key |
-| 429 | Rate Limited | Wait before retrying |
-| 500 | Server Error | Try again later |
+**Request body:**
 
-<Callout type="error">
-If you receive a 401 error, your API key may be invalid or expired. Generate a new one from the Z.AI platform.
-</Callout>
+```json
+{
+  "apiKey": "…",
+  "startTime": "2026-09-14 18:00:00",
+  "endTime": "2026-09-15 18:59:59",
+  "extendedStartTime": "2026-09-08 18:00:00",
+  "extendedEndTime": "2026-09-15 18:59:59"
+}
+```
 
-## Rate Limits
+The response carries `modelUsage`, `toolUsage`, `quotaLimit` (with `billing: "tokens" | "credits"`,
+`level`, and a `kind` of `tokens`, `week` or `mcp` on each limit), `extendedUsage`, `activity`,
+and `upstream.status` with the result of each Z.AI call. The full contract is in the
+[README](https://github.com/MaxRyabov/zai-coding-plan-dashboard/blob/main/README.md#api-reference).
 
-API calls are subject to rate limiting. If you exceed the limit, you'll receive a 429 response.
+## Rate limits
+
+Z.AI publishes no rate limit and none has been hit so far. The dashboard makes five calls per
+account per refresh (model usage twice, tool usage, quota limit, activity). If Z.AI ever answers
+`429`, the dashboard shows a rate-limit error instead of data.
 
 <Callout type="info">
-The dashboard automatically handles rate limiting by spacing out requests. Manual API usage should implement exponential backoff.
+Usage data lags by about 10 minutes — Z.AI's own dashboard says so. Small differences right after a session are expected.
 </Callout>

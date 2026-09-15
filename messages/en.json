@@ -69,8 +69,8 @@
   "summary": {
     "title": "All accounts",
     "account": "Account",
-    "tokenQuota": "Tokens (5 h)",
-    "weekQuota": "Tokens (7 d)",
+    "tokenQuota": "5 h limit",
+    "weekQuota": "Weekly limit",
     "mcpQuota": "MCP (month)",
     "tokens": "Tokens 24 h",
     "tokens7d": "Tokens 7 d",
@@ -84,7 +84,29 @@
   "quota": {
     "used": "% used",
     "remaining": "remaining",
-    "resetsAt": "Resets at {time}"
+    "resetsAt": "Resets at {time}",
+    "kindTokens": "5-hour limit",
+    "kindWeek": "Weekly limit",
+    "kindMcp": "MCP (monthly)",
+    "credits": "credits",
+    "calls": "calls"
+  },
+  "plan": {
+    "credits": "Credits",
+    "tokens": "Tokens",
+    "creditsHint": "Credit-based plan: limits are a fixed budget of credits",
+    "tokensHint": "Token-based plan: limits are reported as a percentage only"
+  },
+  "activity": {
+    "title": "Activity (365 days)",
+    "totalTokens": "Cumulative tokens",
+    "peakTokens": "Peak day",
+    "peakTokensOn": "Peak day {date}",
+    "duration": "Total usage time",
+    "currentStreak": "Current streak",
+    "longestStreak": "Longest streak",
+    "days": "{count} d",
+    "hoursMinutes": "{hours} h {minutes} m"
   },
   "toolUsage": {
     "title": "Tool Usage (Last 24h)",

@@ -69,8 +69,8 @@
   "summary": {
     "title": "Tous les comptes",
     "account": "Compte",
-    "tokenQuota": "Jetons (5 h)",
-    "weekQuota": "Jetons (7 j)",
+    "tokenQuota": "Limite 5 h",
+    "weekQuota": "Limite hebdo",
     "mcpQuota": "MCP (mois)",
     "tokens": "Jetons 24 h",
     "tokens7d": "Jetons 7 j",
@@ -84,7 +84,29 @@
   "quota": {
     "used": "% utilisé",
     "remaining": "restant",
-    "resetsAt": "Réinitialisation à {time}"
+    "resetsAt": "Réinitialisation à {time}",
+    "kindTokens": "Limite sur 5 heures",
+    "kindWeek": "Limite hebdomadaire",
+    "kindMcp": "MCP (mensuel)",
+    "credits": "crédits",
+    "calls": "appels"
+  },
+  "plan": {
+    "credits": "Crédits",
+    "tokens": "Tokens",
+    "creditsHint": "Forfait à crédits : les limites sont un budget fixe de crédits",
+    "tokensHint": "Forfait à tokens : les limites ne sont indiquées qu’en pourcentage"
+  },
+  "activity": {
+    "title": "Activité (365 jours)",
+    "totalTokens": "Tokens cumulés",
+    "peakTokens": "Jour de pointe",
+    "peakTokensOn": "Jour de pointe {date}",
+    "duration": "Temps d’utilisation total",
+    "currentStreak": "Série en cours",
+    "longestStreak": "Plus longue série",
+    "days": "{count} j",
+    "hoursMinutes": "{hours} h {minutes} min"
   },
   "toolUsage": {
     "title": "Utilisation des Outils (Dernières 24h)",

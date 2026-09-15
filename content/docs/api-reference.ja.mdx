@@ -1,20 +1,26 @@
 ---
 title: API リファレンス
-description: Z.AI 利用状況 API エンドポイントの技術ドキュメント
+description: ダッシュボードが読み取る Z.AI モニタリング API のエンドポイントとレスポンス形式
 icon: Code
 ---
 
-# API リファレンス
-
-このページでは、ダッシュボードで使用される Z.AI API エンドポイントについて説明します。
+このページでは、ダッシュボードが呼び出す Z.AI のエンドポイントを説明します。これらは **Z.AI
+が公式に文書化していない** API です。ここに書かれている内容はすべて、GLM Coding Plan
+アカウントの実際のレスポンスで確認したものです（最終確認日：2026-09-15）。各記述の根拠を含む詳細なメモは
+[`docs/zai-api.md`](https://github.com/MaxRyabov/zai-coding-plan-dashboard/blob/main/docs/zai-api.md)（英語）にあります。
 
 ## 認証
 
-すべての API リクエストには、ベアラートークンを使用した認証が必要です：
+すべてのリクエストは Bearer トークン付きの `GET` です。
 
 ```bash
 Authorization: Bearer YOUR_API_KEY
+Accept-Language: en-US,en
 ```
+
+<Callout type="warn">
+API キーは安全に管理してください。ダッシュボードはキーを自身の `/api/usage` ルートにのみ送信し、Z.AI への呼び出しはサーバー側で行います。
+</Callout>
 
 ## ベース URL
 
@@ -22,107 +28,233 @@ Authorization: Bearer YOUR_API_KEY
 https://api.z.ai
 ```
 
+## レスポンスの外側の形式
+
+すべてのエンドポイントはデータを次の形式で包んで返します。
+
+```json
+{ "code": 200, "msg": "Operation successful", "success": true, "data": { ... } }
+```
+
+<Callout type="error">
+**拒否されたキーでも HTTP 200 が返り、401 にはなりません。** 失敗は `"success": false` と業務コード `code` で示されます。HTTP ステータスだけを見ると、無効なキーが「利用のないアカウント」に見えてしまいます。
+</Callout>
+
+| `code` | 発生条件 | ダッシュボードでの扱い |
+|--------|----------|------------------------|
+| `1000` | 形式は正しいが受け付けられないキー | 401 |
+| `1001` | `Authorization` ヘッダーがない | 401 |
+| `401` | トークンを解析できない | 401 |
+| `500` | パスが存在しない（`404 NOT_FOUND`） | 502 |
+
+`msg` のテキストは `Accept-Language` に関係なく英語または中国語で返ります。`code` で判定し、`msg` は表示しないでください。
+
+## 時刻パラメーター
+
+`startTime` と `endTime` は `YYYY-MM-DD HH:mm:ss` 形式の文字列で、呼び出し元の場所に関係なく
+**北京時間（`Asia/Shanghai`）** として解釈されます。2 つは必ず一緒に指定します。
+
+## 2 種類のプラン
+
+| | トークン制プラン | クレジット制プラン |
+|---|---|---|
+| 上限の種類 | `TOKENS_LIMIT` | `CREDIT_LIMIT` |
+| 5 時間と週間の上限 | 割合のみ | 割合と絶対値のクレジット |
+| MCP の上限 | 月間の `TIME_LIMIT` が別にある | なし（MCP も同じクレジットを消費） |
+
+利用状況・ツール・アクティビティのエンドポイントは、どちらのプランでも同じ形式を返します。
+
 ## エンドポイント
 
-### モデル使用状況を取得
+<Tabs items={['クォータ', 'モデル使用状況', 'ツール使用状況', 'アクティビティ']}>
+<Tab value="クォータ">
 
-特定の期間のモデル使用統計を取得します。
+### クォータ上限を取得
 
-```http
-GET /api/monitor/usage/model-usage
-```
-
-**クエリパラメータ：**
-
-| パラメータ | タイプ | 説明 |
-|-----------|--------|------|
-| startTime | string | 開始時刻（形式：`YYYY-MM-DD HH:mm:ss`） |
-| endTime | string | 終了時刻（形式：`YYYY-MM-DD HH:mm:ss`） |
-
-**レスポンス：**
-
-```json
-{
-  "data": [
-    {
-      "model": "glm-4.7",
-      "inputTokens": 12345,
-      "outputTokens": 6789,
-      "totalTokens": 19134,
-      "requestCount": 42
-    }
-  ]
-}
-```
-
-### ツール使用状況を取得
-
-ツール使用統計を取得します。
-
-```http
-GET /api/monitor/usage/tool-usage
-```
-
-**クエリパラメータ：**
-
-モデル使用状況エンドポイントと同じ。
-
-**レスポンス：**
-
-```json
-{
-  "data": [
-    {
-      "tool": "code_execution",
-      "callCount": 100,
-      "successCount": 95,
-      "failureCount": 5
-    }
-  ]
-}
-```
-
-### クォータ制限を取得
-
-現在のクォータと使用制限を取得します。
+すべての上限の現在の状態を返します。パラメーターはありません。
 
 ```http
 GET /api/monitor/usage/quota/limit
 ```
 
-**レスポンス：**
+**トークン制プラン：**
 
 ```json
 {
-  "data": {
-    "limits": [
-      {
-        "type": "TOKENS_LIMIT",
-        "percentage": 45.5
-      },
-      {
-        "type": "TIME_LIMIT",
-        "percentage": 20.0,
-        "currentValue": 200,
-        "usage": 1000
-      }
-    ]
-  }
+  "limits": [
+    { "type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 64, "nextResetTime": 1789472583274 },
+    { "type": "TOKENS_LIMIT", "unit": 6, "number": 1, "percentage": 100, "nextResetTime": 1789470235980 },
+    {
+      "type": "TIME_LIMIT", "unit": 5, "number": 1, "percentage": 1,
+      "usage": 4000, "currentValue": 15, "remaining": 3985, "nextResetTime": 1790593435997,
+      "usageDetails": [{ "modelCode": "search-prime", "usage": 13 }, { "modelCode": "web-reader", "usage": 2 }]
+    }
+  ],
+  "level": "max"
 }
 ```
 
-## エラーハンドリング
+**クレジット制プラン：**
 
-API は標準的な HTTP ステータスコードを返します：
+```json
+{
+  "limits": [
+    {
+      "type": "CREDIT_LIMIT", "unit": 3, "number": 5, "percentage": 11,
+      "usage": 28000, "currentValue": 3219, "remaining": 24780, "nextResetTime": 1789482908408
+    },
+    {
+      "type": "CREDIT_LIMIT", "unit": 6, "number": 1, "percentage": 2,
+      "usage": 140000, "currentValue": 3219, "remaining": 136780, "nextResetTime": 1790062251984
+    }
+  ],
+  "level": "max"
+}
+```
 
-| コード | 説明 |
-|--------|------|
-| 200 | 成功 |
-| 400 | 不正なリクエスト |
-| 401 | 認証されていない |
-| 429 | レート制限 |
-| 500 | サーバーエラー |
+| フィールド | 意味 |
+|------------|------|
+| `type` | `TOKENS_LIMIT`、`CREDIT_LIMIT`、`TIME_LIMIT`（MCP 呼び出し回数） |
+| `unit` | 期間の単位：`3` 時間、`6` 週、`5` 月 |
+| `number` | ウィンドウあたりの単位数：`unit: 3, number: 5` は 5 時間ウィンドウ |
+| `percentage` | 消費率（整数のパーセント） |
+| `currentValue` | 使用量（クレジットまたは回数） |
+| `usage` | **上限値**。使用量ではありません（名前が逆になっています） |
+| `remaining` | 上限値から使用量を引いた残り |
+| `nextResetTime` | エポックミリ秒 |
+| `level` | プランの階層：`lite`、`pro`、`max` |
+
+<Callout type="info">
+ウィンドウはリセット時刻ではなく `unit` で区別してください。週間サイクルの終盤では、週間上限が 5 時間上限より先にリセットされることがあります。2026 年 9 月より前のレスポンスには `unit` がなく、その場合に信頼できるのは配列の順序（5 時間、週間、MCP）だけです。
+</Callout>
+
+</Tab>
+<Tab value="モデル使用状況">
+
+### モデル使用状況を取得
+
+指定期間の 1 時間ごとのトークン数と呼び出し回数を返します。
+
+```http
+GET /api/monitor/usage/model-usage?startTime=2026-09-14 18:00:00&endTime=2026-09-15 18:59:59
+```
+
+**レスポンス**は列指向で、同じインデックスを共有する並列配列です。
+
+```json
+{
+  "x_time": ["2026-09-15 17:00", "2026-09-15 18:00"],
+  "modelCallCount": [97, 91],
+  "tokensUsage": [11852025, 9583075],
+  "totalUsage": { "totalModelCallCount": 188, "totalTokensUsage": 21435100 },
+  "modelDataList": [
+    { "modelName": "GLM-5.3", "sortOrder": 1, "tokensUsage": [11852025, 9581795], "totalTokens": 21433820 },
+    { "modelName": "GLM-5.3-Flash", "sortOrder": 2, "tokensUsage": [0, 1280], "totalTokens": 1280 }
+  ],
+  "granularity": "hourly"
+}
+```
+
+- `x_time` は北京時間で、形式は `YYYY-MM-DD HH:mm` です（2026 年 9 月以降は秒がありません）。
+- 利用のない時間も含め、期間内のすべての時間が返されます。
+- `totalUsage` は期間全体の合計で、系列の合計と一致します。
+- モデルごとの `totalTokens` は指定した時間に**限定されません**。代わりに `modelDataList[].tokensUsage` を合計してください。
+
+</Tab>
+<Tab value="ツール使用状況">
+
+### ツール使用状況を取得
+
+1 時間ごとの MCP ツール呼び出し回数を返します。パラメーターはモデル使用状況と同じです。
+
+```http
+GET /api/monitor/usage/tool-usage?startTime=...&endTime=...
+```
+
+```json
+{
+  "x_time": ["2026-09-15 14:00", "2026-09-15 15:00"],
+  "networkSearchCount": [0, 1],
+  "webReadMcpCount": [0, 0],
+  "zreadMcpCount": [0, 0],
+  "toolDataList": [
+    { "toolCode": "search-prime", "toolNameI18n": "Web Search MCP", "usageCount": [0, 1], "totalUsageCount": 1 }
+  ],
+  "toolSummaryList": [
+    { "toolCode": "search-prime", "toolName": "联网搜索 MCP", "toolNameI18n": "Web Search MCP", "totalUsageCount": 1, "sortOrder": 1 }
+  ],
+  "granularity": "hourly"
+}
+```
+
+- `toolName` は常に中国語です。英語名は `toolNameI18n` にあります。
+- 成功数と失敗数は返されなくなりました。
+
+</Tab>
+<Tab value="アクティビティ">
+
+### アクティビティを取得
+
+日ごとの合計と連続利用日数を返します。Z.AI 自身のダッシュボードの *Activity* ブロックと同じデータで、どちらのプランでも使えます。
+
+```http
+GET /api/monitor/credit-usage/activity?startTime=2025-09-15 00:00:00&endTime=2026-09-15 23:59:59&type=1
+```
+
+`type=1` は個人向けの表示です。Z.AI のダッシュボードは、365 日前から今日までを日単位で要求します。
+
+```json
+{
+  "granularity": "DAY",
+  "timezone": "Asia/Shanghai",
+  "summary": {
+    "totalTokens": 7861995903,
+    "peakDailyTokens": 298081078,
+    "peakDailyTokensDate": "2026-07-07",
+    "totalUsageDurationMs": 1957677158,
+    "currentStreakDays": 1,
+    "longestStreakDays": 37
+  },
+  "series": [
+    { "date": "2026-09-15", "totalCredits": "3219.1337", "totalTokens": 21435100, "mcpCalls": 0 }
+  ]
+}
+```
+
+- `series` には利用のない日も含め、1 日につき 1 件のエントリがあります。
+- クレジット額は 10 進数の**文字列**です。トークン制プランでは常に `"0.0000"` です。
+
+</Tab>
+</Tabs>
+
+## ダッシュボードのプロキシ：`POST /api/usage`
+
+ダッシュボードはブラウザーから Z.AI を直接呼び出しません。独自のルートがキーと期間を受け取り、
+上記のエンドポイントを並列に呼び出して、正規化した 1 つのオブジェクトを返します。
+
+**リクエストボディ：**
+
+```json
+{
+  "apiKey": "…",
+  "startTime": "2026-09-14 18:00:00",
+  "endTime": "2026-09-15 18:59:59",
+  "extendedStartTime": "2026-09-08 18:00:00",
+  "extendedEndTime": "2026-09-15 18:59:59"
+}
+```
+
+レスポンスには `modelUsage`、`toolUsage`、`quotaLimit`（`billing: "tokens" | "credits"`、`level`、
+各上限の `kind` = `tokens`・`week`・`mcp` を含む）、`extendedUsage`、`activity`、そして Z.AI
+への各呼び出しの結果を示す `upstream.status` が含まれます。詳しい仕様は
+[README](https://github.com/MaxRyabov/zai-coding-plan-dashboard/blob/main/README.md#api-reference) を参照してください。
 
 ## レート制限
 
-API 呼び出しはレート制限の対象となります。制限を超えると、429 レスポンスが返されます。
+Z.AI はレート制限を公開しておらず、これまでに制限に達したこともありません。ダッシュボードは
+更新のたびにアカウントごとに 5 回呼び出します（モデル使用状況 2 回、ツール使用状況、クォータ、
+アクティビティ）。Z.AI が `429` を返した場合、ダッシュボードはデータの代わりにレート制限エラーを表示します。
+
+<Callout type="info">
+利用データは約 10 分遅れて反映されます。これは Z.AI 自身のダッシュボードにも明記されています。セッション直後の小さなずれは想定内です。
+</Callout>
