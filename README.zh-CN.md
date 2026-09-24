@@ -61,7 +61,7 @@ pnpm install
 npm run dev
 ```
 
-在浏览器中打开 [http://localhost:3000](http://localhost:3000)
+在浏览器中打开 [http://localhost:3377](http://localhost:3377)
 
 ## 使用方法
 
