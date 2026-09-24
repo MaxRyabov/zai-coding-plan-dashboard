@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ActivityStats } from '@/components/ActivityStats';
 import { QuotaCards } from '@/components/QuotaCards';
 import { ToolUsageTable } from '@/components/ToolUsageTable';
 import { UsageCharts } from '@/components/UsageCharts';
@@ -23,6 +24,7 @@ export function AccountSection({ account }: { account: Account }) {
   const record = records[account.id] ?? IDLE_USAGE_RECORD;
   const isLoading = record.status === 'loading';
   const { data } = record;
+  const plan = data?.quotaLimit?.billing ? data.quotaLimit : null;
 
   const fetchedAt = record.fetchedAt !== null && record.status === 'ok'
     ? new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: timezone })
@@ -33,7 +35,15 @@ export function AccountSection({ account }: { account: Account }) {
     <section className='flex flex-col gap-4'>
       <div className='flex items-center gap-2 border-b border-border/40 pb-2'>
         <h3 className='text-sm font-medium tracking-tight'>{account.label}</h3>
-        {fetchedAt && <span className='text-[10px] text-muted-foreground'>{t('refresh.lastUpdated', { time: fetchedAt })}</span>}
+        {plan && (
+          <span
+            className='rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground'
+            title={plan.billing === 'credits' ? t('plan.creditsHint') : t('plan.tokensHint')}
+          >
+            {[plan.level?.toUpperCase(), plan.billing === 'credits' ? t('plan.credits') : t('plan.tokens')].filter(Boolean).join(' · ')}
+          </span>
+        )}
+        {fetchedAt &&<span className='text-[10px] text-muted-foreground'>{t('refresh.lastUpdated', { time: fetchedAt })}</span>}
         {record.partial && (
           <span className='rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] text-amber-700 dark:text-amber-300'>
             {t('summary.partial')}
@@ -62,6 +72,8 @@ export function AccountSection({ account }: { account: Account }) {
       )}
 
       {data?.quotaLimit?.limits && data.quotaLimit.limits.length > 0 && <QuotaCards limits={data.quotaLimit.limits} />}
+
+      {data?.activity && <ActivityStats activity={data.activity} />}
 
       {data && (
         <UsageCharts

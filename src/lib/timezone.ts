@@ -111,6 +111,17 @@ export function parseWallClock(value: string, timeZone: string): number | null {
 }
 
 /**
+ * Whole Beijing calendar days, from N days back through the end of today — the window Z.AI's
+ * own dashboard asks `credit-usage/activity` for, so streaks and peaks match what it shows.
+ */
+export function buildCalendarWindow(now: Date = new Date(), days = 365): { startTime: string; endTime: string } {
+  return {
+    startTime: `${formatWallClockDate(new Date(now.getTime() - days * 24 * 60 * 60 * 1000), ZAI_TIMEZONE)} 00:00:00`,
+    endTime: `${formatWallClockDate(now, ZAI_TIMEZONE)} 23:59:59`,
+  };
+}
+
+/**
  * An hour-aligned "last N days" window expressed in Beijing wall clock — anywhere else and
  * the window is skewed by the browser's offset.
  *

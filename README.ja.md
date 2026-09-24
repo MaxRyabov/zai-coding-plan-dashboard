@@ -61,7 +61,7 @@ pnpm install
 npm run dev
 ```
 
-ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
+ブラウザで [http://localhost:3377](http://localhost:3377) を開いてください。
 
 ## 使用方法
 

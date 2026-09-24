@@ -1,23 +1,21 @@
 ﻿// Z.AI's monitoring endpoints are undocumented; what we know about them, including the
 // non-obvious failure modes handled below, is written up in docs/zai-api.md.
 import { NextRequest, NextResponse } from 'next/server';
-import { parseWallClock, ZAI_TIMEZONE } from '@/lib/timezone';
-import type { TimeSeriesItem, UpstreamDetail, UpstreamFailure } from '@/lib/usage';
-import { normalizeQuotaLimits, type UpstreamQuotaLimitItem } from '@/lib/quota';
+import { buildCalendarWindow } from '@/lib/timezone';
+import type { UpstreamDetail, UpstreamFailure } from '@/lib/usage';
+import { normalizeQuota, type UpstreamQuotaLimit } from '@/lib/quota';
+import {
+  normalizeActivity,
+  normalizeModelUsage,
+  normalizeToolUsage,
+  type UpstreamActivity,
+  type UpstreamModelUsage,
+} from '@/lib/upstream';
 
 const ZAI_BASE_URL = 'https://api.z.ai';
 
-/** Z.AI returns the time series column-wise: one parallel array per metric. */
-interface UpstreamModelUsage {
-  x_time?: string[];
-  modelCallCount?: number[];
-  tokensUsage?: number[];
-  totalUsage?: { totalModelCallCount?: number; totalTokensUsage?: number };
-}
-
-interface UpstreamQuotaLimit {
-  limits?: UpstreamQuotaLimitItem[];
-}
+/** How far back the activity counters (streaks, peak day, lifetime tokens) look. */
+const ACTIVITY_WINDOW_DAYS = 365;
 
 /** Carries the upstream HTTP status so a dead key can be told apart from an idle one. */
 class UpstreamError extends Error {
@@ -155,13 +153,19 @@ export async function POST(request: NextRequest) {
     const wantsExtended = Boolean(extendedStartTime && extendedEndTime);
     const extendedParams = range(extendedStartTime, extendedEndTime);
 
-    const [modelUsage, toolUsage, quotaLimit, extendedUsage] = await Promise.all([
+    // Streaks and lifetime counters. Answered for token and credit plans alike; `type=1` is the
+    // personal (not team) view, the same one Z.AI's own dashboard asks for.
+    const activityWindow = buildCalendarWindow(new Date(), ACTIVITY_WINDOW_DAYS);
+    const activityParams = `${range(activityWindow.startTime, activityWindow.endTime)}&type=1`;
+
+    const [modelUsage, toolUsage, quotaLimit, extendedUsage, activity] = await Promise.all([
       settle(fetchUsage(`${ZAI_BASE_URL}/api/monitor/usage/model-usage${queryParams}`, apiKey)),
       settle(fetchUsage(`${ZAI_BASE_URL}/api/monitor/usage/tool-usage${queryParams}`, apiKey)),
       settle(fetchUsage(`${ZAI_BASE_URL}/api/monitor/usage/quota/limit`, apiKey)),
       wantsExtended
         ? settle(fetchUsage(`${ZAI_BASE_URL}/api/monitor/usage/model-usage${extendedParams}`, apiKey))
         : Promise.resolve<Settled>({ data: null, status: null, failure: NO_FAILURE }),
+      settle(fetchUsage(`${ZAI_BASE_URL}/api/monitor/credit-usage/activity${activityParams}`, apiKey)),
     ]);
 
     const byEndpoint: Record<string, Settled> = {
@@ -169,6 +173,7 @@ export async function POST(request: NextRequest) {
       toolUsage,
       quotaLimit,
       ...(wantsExtended ? { extendedUsage } : {}),
+      activity,
     };
 
     // Log every failure with Z.AI's own code and message. The UI can only ever show a mapped
@@ -189,6 +194,7 @@ export async function POST(request: NextRequest) {
         toolUsage: toolUsage.status,
         quotaLimit: quotaLimit.status,
         ...(wantsExtended ? { extendedUsage: extendedUsage.status } : {}),
+        activity: activity.status,
       },
       ...(Object.keys(failures).length > 0 ? { failures } : {}),
     };
@@ -201,32 +207,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error, upstream }, { status });
     }
 
-    // Process quota limit data
-    const quota = quotaLimit.data as UpstreamQuotaLimit | null;
-    const processedQuotaLimit = normalizeQuotaLimits(quota?.limits);
-
-    // Transform model usage time series data for charts.
-    // x_time is a Beijing wall-clock string; resolve it to an instant so the client can
-    // render it in whichever timezone the user picked.
-    const model = modelUsage.data as UpstreamModelUsage | null;
-    const modelUsageTimeSeries: TimeSeriesItem[] = model?.x_time?.map((time: string, index: number) => ({
-      time: time.split(' ')[1] || time, // Extract just the hour
-      fullTime: time,
-      timestamp: parseWallClock(time, ZAI_TIMEZONE),
-      calls: model.modelCallCount?.[index] || 0,
-      tokens: model.tokensUsage?.[index] || 0,
-    })).filter((item: TimeSeriesItem) => item.calls > 0 || item.tokens > 0) || [];
-
     const extendedModel = extendedUsage.data as UpstreamModelUsage | null;
 
     const result = {
-      modelUsage: {
-        timeSeries: modelUsageTimeSeries,
-        totalCalls: model?.totalUsage?.totalModelCallCount || 0,
-        totalTokens: model?.totalUsage?.totalTokensUsage || 0,
-      },
-      toolUsage: toolUsage.data,
-      quotaLimit: processedQuotaLimit ? { limits: processedQuotaLimit } : quotaLimit.data,
+      modelUsage: normalizeModelUsage(modelUsage.data as UpstreamModelUsage | null),
+      toolUsage: normalizeToolUsage(toolUsage.data),
+      quotaLimit: normalizeQuota(quotaLimit.data as UpstreamQuotaLimit | null),
       // null rather than zeroes when the wider window was not asked for or did not answer —
       // the UI must be able to tell "no data" from "no usage".
       extendedUsage: extendedUsage.status === 200
@@ -235,6 +221,7 @@ export async function POST(request: NextRequest) {
           totalTokens: extendedModel?.totalUsage?.totalTokensUsage || 0,
         }
         : null,
+      activity: activity.status === 200 ? normalizeActivity(activity.data as UpstreamActivity | null) : null,
       upstream,
     };
 

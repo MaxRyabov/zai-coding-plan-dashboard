@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTimezone } from '@/components/TimezoneContext';
+import { useQuotaLabel } from '@/components/QuotaCards';
 import type { ModelUsageData, QuotaLimitItem } from '@/lib/usage';
 
 function tooltipLabel(label: unknown, payload: ReadonlyArray<{ payload?: unknown }> | undefined) {
@@ -35,6 +36,7 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
   const locale = useLocale();
   const { timezone } = useTimezone();
   const { resolvedTheme } = useTheme();
+  const quotaLabel = useQuotaLabel();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
   }
 
   const isDark = mounted && resolvedTheme === 'dark';
+  const compactNumber = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 });
 
   // Material You theme-aware colors - softer, more harmonious
   const colors = {
@@ -87,7 +90,7 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
   };
 
   const quotaData = quotaLimits?.map((item) => ({
-    name: item.type,
+    name: quotaLabel(item),
     value: item.percentage,
     remaining: Math.max(0, 100 - item.percentage),
   })) || [];
@@ -108,6 +111,15 @@ export function UsageCharts({ modelUsage, quotaLimits }: UsageChartsProps) {
             <CardDescription className='text-xs'>
               {t('charts.totalTokens', { count: modelUsage.totalTokens.toLocaleString() })}
             </CardDescription>
+            {modelUsage.models && modelUsage.models.length > 1 && (
+              <ul className='flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground'>
+                {modelUsage.models.map((model) => (
+                  <li key={model.name} className='tabular-nums'>
+                    {model.name} <span className='text-foreground'>{compactNumber.format(model.tokens)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardHeader>
           <CardContent>
             <div className='h-[180px]'>

@@ -69,8 +69,8 @@
   "summary": {
     "title": "전체 계정",
     "account": "계정",
-    "tokenQuota": "토큰(5시간)",
-    "weekQuota": "토큰(7일)",
+    "tokenQuota": "5시간 한도",
+    "weekQuota": "주간 한도",
     "mcpQuota": "MCP(월)",
     "tokens": "토큰 24시간",
     "tokens7d": "토큰 7일",
@@ -84,7 +84,29 @@
   "quota": {
     "used": "% 사용됨",
     "remaining": "남음",
-    "resetsAt": "{time}에 재설정"
+    "resetsAt": "{time}에 재설정",
+    "kindTokens": "5시간 한도",
+    "kindWeek": "주간 한도",
+    "kindMcp": "MCP (월간)",
+    "credits": "크레딧",
+    "calls": "회"
+  },
+  "plan": {
+    "credits": "크레딧",
+    "tokens": "토큰",
+    "creditsHint": "크레딧 요금제: 한도는 고정된 크레딧 예산입니다",
+    "tokensHint": "토큰 요금제: 한도는 비율로만 표시됩니다"
+  },
+  "activity": {
+    "title": "활동 (365일)",
+    "totalTokens": "누적 토큰",
+    "peakTokens": "최고 사용일",
+    "peakTokensOn": "최고 사용일 {date}",
+    "duration": "총 사용 시간",
+    "currentStreak": "현재 연속 사용",
+    "longestStreak": "최장 연속 사용",
+    "days": "{count}일",
+    "hoursMinutes": "{hours}시간 {minutes}분"
   },
   "toolUsage": {
     "title": "도구 사용 현황 (최근 24시간)",

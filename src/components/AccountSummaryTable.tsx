@@ -75,11 +75,9 @@ export function AccountSummaryTable({ onManage, isManaging }: { onManage: () => 
             <tbody>
               {accounts.map((account) => {
                 const record = records[account.id] ?? IDLE_USAGE_RECORD;
+                // Credit plans have no MCP cap at all — MCP draws on the same credits — so that
+                // cell legitimately stays empty for them.
                 const limits = record.data?.quotaLimit?.limits ?? [];
-                // Z.AI's name for the weekly cap is undocumented, so accept whatever limit is
-                // left over once the 5-hour and monthly ones are accounted for.
-                const weekLimit = limits.find((limit) => limit.kind === 'week')
-                  ?? limits.find((limit) => limit.kind === 'other');
 
                 return (
                   <tr key={account.id} className='border-b'>
@@ -105,7 +103,7 @@ export function AccountSummaryTable({ onManage, isManaging }: { onManage: () => 
                             <QuotaCell limit={limits.find((limit) => limit.kind === 'tokens')} />
                           </td>
                           <td className='py-2 px-4'>
-                            <QuotaCell limit={weekLimit} />
+                            <QuotaCell limit={limits.find((limit) => limit.kind === 'week')} />
                           </td>
                           <td className='py-2 px-4'>
                             <QuotaCell limit={limits.find((limit) => limit.kind === 'mcp')} />

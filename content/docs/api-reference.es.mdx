@@ -1,128 +1,261 @@
 ---
-title: Referencia de API
-description: Documentación técnica para los endpoints de la API de Uso de Z.AI
+title: Referencia de la API
+description: Los endpoints de monitorización de Z.AI que lee el panel y los formatos que devuelven
 icon: Code
 ---
 
-# Referencia de API
-
-Esta página documenta los endpoints de la API de Z.AI utilizados por el panel.
+Esta página describe los endpoints de Z.AI que llama el panel. Z.AI **no los documenta**: todo lo
+que aparece aquí se ha observado en respuestas reales de cuentas del GLM Coding Plan (última
+comprobación: 2026-09-15). Las notas completas, con la evidencia de cada afirmación, están en
+[`docs/zai-api.md`](https://github.com/MaxRyabov/zai-coding-plan-dashboard/blob/main/docs/zai-api.md) (en inglés).
 
 ## Autenticación
 
-Todas las solicitudes de la API requieren autenticación usando un token de portador：
+Cada solicitud es un `GET` con un token Bearer:
 
 ```bash
 Authorization: Bearer YOUR_API_KEY
+Accept-Language: en-US,en
 ```
 
-## URL Base
+<Callout type="warn">
+Mantén tu clave de API a salvo. El panel solo la envía a su propia ruta `/api/usage`, que llama a Z.AI desde el servidor.
+</Callout>
+
+## URL base
 
 ```
 https://api.z.ai
 ```
 
+## Envoltorio de la respuesta
+
+Todos los endpoints envuelven los datos:
+
+```json
+{ "code": 200, "msg": "Operation successful", "success": true, "data": { ... } }
+```
+
+<Callout type="error">
+**Una clave rechazada devuelve HTTP 200, no 401.** El fallo se indica con `"success": false` y un `code` de negocio. Si solo se mira el estado HTTP, una clave inválida parece una cuenta sin actividad.
+</Callout>
+
+| `code` | Cuándo | En el panel |
+|--------|--------|-------------|
+| `1000` | La clave tiene el formato correcto pero no se acepta | 401 |
+| `1001` | Falta la cabecera `Authorization` | 401 |
+| `401` | No se pudo interpretar el token | 401 |
+| `500` | La ruta no existe (`404 NOT_FOUND`) | 502 |
+
+El texto de `msg` llega en inglés o en chino sin importar `Accept-Language`: interpreta `code` y no muestres nunca `msg`.
+
+## Parámetros de tiempo
+
+`startTime` y `endTime` son cadenas `YYYY-MM-DD HH:mm:ss` que se interpretan en **hora de Pekín
+(`Asia/Shanghai`)**, esté donde esté quien llama. Hay que enviar los dos juntos.
+
+## Dos tipos de plan
+
+| | Plan por tokens | Plan por créditos |
+|---|---|---|
+| Tipo de límite | `TOKENS_LIMIT` | `CREDIT_LIMIT` |
+| Límites de 5 horas y semanal | Solo porcentaje | Porcentaje y créditos absolutos |
+| Límite de MCP | `TIME_LIMIT` mensual aparte | Ninguno: MCP gasta los mismos créditos |
+
+Los endpoints de uso, herramientas y actividad devuelven el mismo formato en ambos planes.
+
 ## Endpoints
 
-### Obtener Uso de Modelos
+<Tabs items={['Cuota', 'Uso de modelos', 'Uso de herramientas', 'Actividad']}>
+<Tab value="Cuota">
 
-Recupera estadísticas de uso de modelos para un período de tiempo.
+### Obtener los límites de cuota
 
-```http
-GET /api/monitor/usage/model-usage
-```
-
-**Parámetros de Consulta：**
-
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| startTime | string | Hora de inicio (formato：`YYYY-MM-DD HH:mm:ss`) |
-| endTime | string | Hora final (formato：`YYYY-MM-DD HH:mm:ss`) |
-
-**Respuesta：**
-
-```json
-{
-  "data": [
-    {
-      "model": "glm-4.7",
-      "inputTokens": 12345,
-      "outputTokens": 6789,
-      "totalTokens": 19134,
-      "requestCount": 42
-    }
-  ]
-}
-```
-
-### Obtener Uso de Herramientas
-
-Recupera estadísticas de uso de herramientas.
-
-```http
-GET /api/monitor/usage/tool-usage
-```
-
-**Parámetros de Consulta：**
-
-Igual que el endpoint de Uso de Modelos.
-
-**Respuesta：**
-
-```json
-{
-  "data": [
-    {
-      "tool": "code_execution",
-      "callCount": 100,
-      "successCount": 95,
-      "failureCount": 5
-    }
-  ]
-}
-```
-
-### Obtener Límite de Cuota
-
-Recupera la cuota actual y límites de uso.
+Estado actual de todos los límites. Sin parámetros.
 
 ```http
 GET /api/monitor/usage/quota/limit
 ```
 
-**Respuesta：**
+**Plan por tokens:**
 
 ```json
 {
-  "data": {
-    "limits": [
-      {
-        "type": "TOKENS_LIMIT",
-        "percentage": 45.5
-      },
-      {
-        "type": "TIME_LIMIT",
-        "percentage": 20.0,
-        "currentValue": 200,
-        "usage": 1000
-      }
-    ]
-  }
+  "limits": [
+    { "type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 64, "nextResetTime": 1789472583274 },
+    { "type": "TOKENS_LIMIT", "unit": 6, "number": 1, "percentage": 100, "nextResetTime": 1789470235980 },
+    {
+      "type": "TIME_LIMIT", "unit": 5, "number": 1, "percentage": 1,
+      "usage": 4000, "currentValue": 15, "remaining": 3985, "nextResetTime": 1790593435997,
+      "usageDetails": [{ "modelCode": "search-prime", "usage": 13 }, { "modelCode": "web-reader", "usage": 2 }]
+    }
+  ],
+  "level": "max"
 }
 ```
 
-## Manejo de Errores
+**Plan por créditos:**
 
-La API devuelve códigos de estado HTTP estándar：
+```json
+{
+  "limits": [
+    {
+      "type": "CREDIT_LIMIT", "unit": 3, "number": 5, "percentage": 11,
+      "usage": 28000, "currentValue": 3219, "remaining": 24780, "nextResetTime": 1789482908408
+    },
+    {
+      "type": "CREDIT_LIMIT", "unit": 6, "number": 1, "percentage": 2,
+      "usage": 140000, "currentValue": 3219, "remaining": 136780, "nextResetTime": 1790062251984
+    }
+  ],
+  "level": "max"
+}
+```
 
-| Código | Descripción |
-|--------|-------------|
-| 200 | Éxito |
-| 400 | Solicitud Incorrecta |
-| 401 | No Autorizado |
-| 429 | Límite de Tasa Excedido |
-| 500 | Error del Servidor |
+| Campo | Significado |
+|-------|-------------|
+| `type` | `TOKENS_LIMIT`, `CREDIT_LIMIT` o `TIME_LIMIT` (llamadas MCP) |
+| `unit` | Unidad del periodo: `3` horas, `6` semanas, `5` meses |
+| `number` | Unidades por ventana: `unit: 3, number: 5` es la ventana de 5 horas |
+| `percentage` | Porcentaje consumido, entero |
+| `currentValue` | Cantidad usada (créditos o llamadas) |
+| `usage` | **El tope**, no lo consumido: el nombre está invertido |
+| `remaining` | Tope menos lo consumido |
+| `nextResetTime` | Epoch en milisegundos |
+| `level` | Nivel del plan: `lite`, `pro`, `max` |
 
-## Límites de Tasa
+<Callout type="info">
+Distingue las ventanas por `unit`, nunca por la hora de reinicio: al final de un ciclo semanal el límite semanal puede reiniciarse antes que el de 5 horas. Las respuestas anteriores a septiembre de 2026 no tenían `unit`; ahí la única señal fiable es el orden del array (5 horas, semana, MCP).
+</Callout>
 
-Las llamadas a la API están sujetas a limitación de tasa. Si excedes el límite, recibirás una respuesta 429.
+</Tab>
+<Tab value="Uso de modelos">
+
+### Obtener el uso de modelos
+
+Tokens y llamadas por hora en un intervalo.
+
+```http
+GET /api/monitor/usage/model-usage?startTime=2026-09-14 18:00:00&endTime=2026-09-15 18:59:59
+```
+
+**Respuesta** — por columnas: arrays paralelos que comparten índice.
+
+```json
+{
+  "x_time": ["2026-09-15 17:00", "2026-09-15 18:00"],
+  "modelCallCount": [97, 91],
+  "tokensUsage": [11852025, 9583075],
+  "totalUsage": { "totalModelCallCount": 188, "totalTokensUsage": 21435100 },
+  "modelDataList": [
+    { "modelName": "GLM-5.3", "sortOrder": 1, "tokensUsage": [11852025, 9581795], "totalTokens": 21433820 },
+    { "modelName": "GLM-5.3-Flash", "sortOrder": 2, "tokensUsage": [0, 1280], "totalTokens": 1280 }
+  ],
+  "granularity": "hourly"
+}
+```
+
+- `x_time` está en hora de Pekín, formato `YYYY-MM-DD HH:mm` (sin segundos desde septiembre de 2026).
+- Se devuelven todas las horas del intervalo, también las que no tienen uso.
+- `totalUsage` cubre todo el intervalo y coincide con la suma de la serie.
+- `totalTokens` por modelo **no** se limita a las horas pedidas: suma `modelDataList[].tokensUsage` en su lugar.
+
+</Tab>
+<Tab value="Uso de herramientas">
+
+### Obtener el uso de herramientas
+
+Llamadas a herramientas MCP por hora. Mismos parámetros que el uso de modelos.
+
+```http
+GET /api/monitor/usage/tool-usage?startTime=...&endTime=...
+```
+
+```json
+{
+  "x_time": ["2026-09-15 14:00", "2026-09-15 15:00"],
+  "networkSearchCount": [0, 1],
+  "webReadMcpCount": [0, 0],
+  "zreadMcpCount": [0, 0],
+  "toolDataList": [
+    { "toolCode": "search-prime", "toolNameI18n": "Web Search MCP", "usageCount": [0, 1], "totalUsageCount": 1 }
+  ],
+  "toolSummaryList": [
+    { "toolCode": "search-prime", "toolName": "联网搜索 MCP", "toolNameI18n": "Web Search MCP", "totalUsageCount": 1, "sortOrder": 1 }
+  ],
+  "granularity": "hourly"
+}
+```
+
+- `toolName` siempre está en chino; el nombre en inglés es `toolNameI18n`.
+- Ya no se informan los recuentos de éxitos y fallos.
+
+</Tab>
+<Tab value="Actividad">
+
+### Obtener la actividad
+
+Totales diarios y rachas: el bloque *Activity* del panel de Z.AI. Funciona en ambos tipos de plan.
+
+```http
+GET /api/monitor/credit-usage/activity?startTime=2025-09-15 00:00:00&endTime=2026-09-15 23:59:59&type=1
+```
+
+`type=1` es la vista personal. El panel de Z.AI pide días completos: 365 días atrás hasta hoy.
+
+```json
+{
+  "granularity": "DAY",
+  "timezone": "Asia/Shanghai",
+  "summary": {
+    "totalTokens": 7861995903,
+    "peakDailyTokens": 298081078,
+    "peakDailyTokensDate": "2026-07-07",
+    "totalUsageDurationMs": 1957677158,
+    "currentStreakDays": 1,
+    "longestStreakDays": 37
+  },
+  "series": [
+    { "date": "2026-09-15", "totalCredits": "3219.1337", "totalTokens": 21435100, "mcpCalls": 0 }
+  ]
+}
+```
+
+- `series` tiene una entrada por día, también los días sin uso.
+- Los importes de créditos son **cadenas** decimales; en los planes por tokens siempre valen `"0.0000"`.
+
+</Tab>
+</Tabs>
+
+## Proxy del panel: `POST /api/usage`
+
+El panel nunca llama a Z.AI desde el navegador. Su propia ruta recibe la clave y las ventanas de
+tiempo, llama en paralelo a los endpoints anteriores y devuelve un único objeto normalizado.
+
+**Cuerpo de la solicitud:**
+
+```json
+{
+  "apiKey": "…",
+  "startTime": "2026-09-14 18:00:00",
+  "endTime": "2026-09-15 18:59:59",
+  "extendedStartTime": "2026-09-08 18:00:00",
+  "extendedEndTime": "2026-09-15 18:59:59"
+}
+```
+
+La respuesta incluye `modelUsage`, `toolUsage`, `quotaLimit` (con `billing: "tokens" | "credits"`,
+`level` y un `kind` de `tokens`, `week` o `mcp` en cada límite), `extendedUsage`, `activity` y
+`upstream.status` con el resultado de cada llamada a Z.AI. El contrato completo está en el
+[README](https://github.com/MaxRyabov/zai-coding-plan-dashboard/blob/main/README.md#api-reference).
+
+## Límites de frecuencia
+
+Z.AI no publica ningún límite de frecuencia y hasta ahora no se ha alcanzado ninguno. El panel
+hace cinco llamadas por cuenta en cada actualización (uso de modelos dos veces, uso de
+herramientas, cuota y actividad). Si Z.AI responde alguna vez con `429`, el panel muestra un
+error de límite de frecuencia en lugar de los datos.
+
+<Callout type="info">
+Los datos de uso llevan unos 10 minutos de retraso, como indica el propio panel de Z.AI. Es normal ver pequeñas diferencias justo después de una sesión.
+</Callout>

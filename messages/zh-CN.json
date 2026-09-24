@@ -69,8 +69,8 @@
   "summary": {
     "title": "所有账户",
     "account": "账户",
-    "tokenQuota": "Token（5 小时）",
-    "weekQuota": "Token（7 天）",
+    "tokenQuota": "5 小时额度",
+    "weekQuota": "每周额度",
     "mcpQuota": "MCP（月）",
     "tokens": "Token 24 小时",
     "tokens7d": "Token 7 天",
@@ -84,7 +84,29 @@
   "quota": {
     "used": "% 已使用",
     "remaining": "剩余",
-    "resetsAt": "于 {time} 重置"
+    "resetsAt": "于 {time} 重置",
+    "kindTokens": "5 小时额度",
+    "kindWeek": "每周额度",
+    "kindMcp": "MCP（每月）",
+    "credits": "积分",
+    "calls": "次"
+  },
+  "plan": {
+    "credits": "积分",
+    "tokens": "Tokens",
+    "creditsHint": "积分制套餐：额度为固定的积分预算",
+    "tokensHint": "Token 制套餐：额度仅以百分比显示"
+  },
+  "activity": {
+    "title": "活动（365 天）",
+    "totalTokens": "累计 Tokens",
+    "peakTokens": "峰值日",
+    "peakTokensOn": "峰值日 {date}",
+    "duration": "累计使用时长",
+    "currentStreak": "当前连续天数",
+    "longestStreak": "最长连续天数",
+    "days": "{count} 天",
+    "hoursMinutes": "{hours} 小时 {minutes} 分钟"
   },
   "toolUsage": {
     "title": "工具使用情况（过去 24 小时）",

@@ -61,7 +61,7 @@ pnpm install
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+Abre [http://localhost:3377](http://localhost:3377) en tu navegador.
 
 ## Uso
 

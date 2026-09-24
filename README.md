@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3377](http://localhost:3377)
 
 ## API Reference
 
@@ -85,41 +85,42 @@ populates `extendedUsage` in the response. The dashboard uses it for the 7-day c
     "timeSeries": [
       {
         "time": "14:00",
-        "fullTime": "2026-01-13 14:00:00",
+        "fullTime": "2026-09-15 14:00",
+        "timestamp": 1789452000000,
         "calls": 1234,
         "tokens": 567890
       }
     ],
     "totalCalls": 50000,
-    "totalTokens": 10000000
+    "totalTokens": 10000000,
+    "models": [{ "name": "GLM-5.3", "tokens": 9500000 }, { "name": "GLM-5.3-Flash", "tokens": 500000 }]
   },
   "toolUsage": [
-    {
-      "tool": "browser",
-      "callCount": 150,
-      "successCount": 145,
-      "failureCount": 5
-    }
+    { "tool": "Web Search MCP", "callCount": 150 }
   ],
   "quotaLimit": {
+    "billing": "credits",
+    "level": "max",
     "limits": [
       {
         "kind": "tokens",
-        "type": "Token Usage (5 Hour)",
-        "percentage": 65,
-        "currentUsage": 650000,
-        "total": 1000000,
-        "remaining": 350000,
-        "nextResetTime": 1736812800000
+        "type": "CREDIT_LIMIT",
+        "measure": "credits",
+        "percentage": 11,
+        "currentUsage": 3219,
+        "total": 28000,
+        "remaining": 24780,
+        "nextResetTime": 1789482908408
       },
       {
-        "kind": "mcp",
-        "type": "MCP Usage (1 Month)",
-        "percentage": 42,
-        "currentUsage": 84,
-        "total": 200,
-        "remaining": 116,
-        "usageDetails": [...]
+        "kind": "week",
+        "type": "CREDIT_LIMIT",
+        "measure": "credits",
+        "percentage": 2,
+        "currentUsage": 3219,
+        "total": 140000,
+        "remaining": 136780,
+        "nextResetTime": 1790062251984
       }
     ]
   },
@@ -127,15 +128,31 @@ populates `extendedUsage` in the response. The dashboard uses it for the 7-day c
     "totalCalls": 9800,
     "totalTokens": 71000000
   },
+  "activity": {
+    "totalTokens": 7861995903,
+    "peakDailyTokens": 298081078,
+    "peakDailyTokensDate": "2026-07-07",
+    "totalUsageDurationMs": 1957677158,
+    "currentStreakDays": 1,
+    "longestStreakDays": 37
+  },
   "upstream": {
-    "status": { "modelUsage": 200, "toolUsage": 200, "quotaLimit": 200, "extendedUsage": 200 }
+    "status": { "modelUsage": 200, "toolUsage": 200, "quotaLimit": 200, "extendedUsage": 200, "activity": 200 }
   }
 }
 ```
 
-`extendedUsage` is `null` when the wider window was not requested or did not answer, so the UI
-can tell "no data" from "no usage". Its status key appears only when the window was requested,
-and it never affects the all-endpoints-failed verdict.
+`quotaLimit` depends on the plan. `billing: "credits"` plans report both windows in absolute
+credits and have no MCP limit; `billing: "tokens"` plans report the 5-hour (`kind: "tokens"`)
+and weekly (`kind: "week"`) windows as percentages only, plus a monthly MCP limit
+(`kind: "mcp"`, `measure: "calls"`). `kind` is the stable discriminator; `type` is Z.AI's raw
+limit type, not a label. The upstream shapes are described in [docs/zai-api.md](docs/zai-api.md).
+
+`toolUsage` rows carry `successCount` / `failureCount` only when Z.AI still sends them.
+
+`extendedUsage` and `activity` are `null` when not requested or not answered, so the UI can
+tell "no data" from "no usage". Neither affects the all-endpoints-failed verdict; the
+`extendedUsage` status key appears only when the window was requested.
 
 `upstream.status` carries the per-endpoint result so a dead key can be told apart from an idle
 one. Z.AI answers a bad key with HTTP 200 and `{"success": false, "code": 1000}`, which this

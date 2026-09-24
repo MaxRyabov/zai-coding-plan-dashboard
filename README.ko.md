@@ -61,7 +61,7 @@ pnpm install
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000) 열으세요.
+브라우저에서 [http://localhost:3377](http://localhost:3377) 열으세요.
 
 ## 사용 방법
 
