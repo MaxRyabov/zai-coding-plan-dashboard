@@ -47,6 +47,7 @@ next-env.d.ts
 tmpclaude-*
 nul
 .claude/settings.local.json
+/.claude/ralph-loop.local.md
 .playwright-mcp/
 .mcp.json
 
